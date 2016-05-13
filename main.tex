@@ -1,0 +1,47 @@
+% main.tex
+
+\documentclass[
+zihao=-4, % 默认字号小四
+fontset=none, % 不配置中文字体
+UTF8, % 编码
+openany, % A new chapter starts on the next page
+twoside % Latex distinguishes between an inner and outer margin
+]{ctexbook}
+
+\input{setup/package.tex}
+
+\graphicspath{{figures/}}
+
+\begin{document}
+
+\input{setup/definition}
+\input{setup/format}
+
+\frontmatter
+\input{cover}
+
+\pdfbookmark[0]{目~~录}{toc}
+\tableofcontents
+% 清除目录页后面空页的页眉和页脚
+\clearpage{\pagestyle{empty}\cleardoublepage}
+
+\mainmatter \defaultfont \sloppy \raggedbottom
+
+% 正文章节
+\include{body/introduction}
+\include{body/figures}
+
+% 参考文献
+\defaultfont
+\bibliographystyle{GBT7714-2005NLang-HIT}
+\addcontentsline{toc}{chapter}{参考文献}
+\addtolength{\bibsep}{-0.8em}
+\nocite{*}
+\bibliography{reference}
+
+% 附录
+\include{appendix/acknowledgements}
+
+\clearpage
+
+\end{document} 
