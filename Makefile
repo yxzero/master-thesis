@@ -8,6 +8,10 @@ all:
 	@echo "Done. Starting the browser......"
 	open main.pdf&
 
+test:
+	xelatex main.tex
+	open main.pdf&
+
 clean:
 	@echo "Cleaning up......"
 	find . -name '*.aux' -exec rm -f {} \;
