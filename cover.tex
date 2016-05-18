@@ -1,5 +1,5 @@
 
-\newcommand{\ctitle}{面向多通道爬虫的Web内容提取技术研究}
+\newcommand{\ctitle}{面向多通道爬虫的Web内容抽取技术研究}
 \newcommand{\cdegree}{工学硕士}
 \newcommand{\csubject}{计算机科学与技术}
 \newcommand{\caffiliate}{计算机科学与技术学院}
@@ -24,37 +24,42 @@
 
 \newcommand{\cabstract}{
 随着~Internet~的迅猛发展，网络已经成为一个信息发布和消费的巨大平台。
-由于互联网具有快速传播和广泛覆盖的特性，对互联网舆情进行有效监控是必不可少的。
+互联网具有快速传播和广泛覆盖的特性，对互联网舆情进行有效监控是必不可少的。
+由于网页固有的半结构性以及大量存在的与主题无关的噪声，研究如何从Web中抽取人们所需要的信息
+变得越来越重要。
 在一个聚焦于新闻、博客和论坛（它们都是很有代表性的信息传播渠道）的多通道爬虫系统中，
 我们面临如下挑战：~1~）大量网站需要监控；~2~）网站有不同的结构和布局；~3~）网站会不定期改版。
-这些挑战促使我们提出高度自动化的Web内容提取技术，以减少系统的扩展和维护成本。
+这些挑战促使我们提出高度自动化的Web内容抽取技术，以减少系统的扩展和维护成本。
 
-对于新闻、博客这种正文密集的网站，提出了一个模板无关的基于有效字符的内容提取算法
+对于新闻、博客这种正文密集的网站，提出了一个模板无关的基于有效字符的内容抽取算法
 ~CEVC (Content Extraction via Valid Characters)~。
 为了验证该方法，从知名的中文、英文新闻和博客网站上任意爬取了部分网页，构成测试数据集进行实验。
 实验结果表明~CEVC~能达到平均~$96\%$~的~F\textsubscript{1}-measure~，效果优于之前的算法
 ~CETR~和~CETD~。
 
-对于典型的论坛网站，利用帖子中普遍存在的发帖时间信息，提出了一个论坛帖子提取算法
+对于典型的论坛网站，利用帖子中普遍存在的发帖时间信息，提出了一个论坛帖子抽取算法
 ~PEAN (Post Extraction via Anchor Nodes)~。
-为了和同样利用发帖时间信息的帖子提取算法~MiBAT~比较效果，我们从知名的中文论坛网站上采集网页
+为了和同样利用发帖时间信息的帖子抽取算法~MiBAT~比较效果，我们从知名的中文论坛网站上采集网页
 进行实验。实验结果表明~PEAN~能达到平均~$94.7\%$~的~F\textsubscript{1}-measure~，
 效果优于~MiBAT~。
 
-为了验证本文提出的内容提取算法的实际效果，设计了一个并行多通道爬虫框架，并在此基础上实现了
-一个针对新闻网站的爬虫。由于使用了模板无关的内容提取算法，该爬虫能够在没有人工辅助的情况下爬取
+为了验证本文提出的内容抽取算法的实际效果，设计了一个并行多通道爬虫框架，并在此基础上实现了
+一个针对新闻网站的爬虫。由于使用了模板无关的内容抽取算法，该爬虫能够在没有人工辅助的情况下爬取
 新的网站，大大减少了系统扩展的成本。
-实际系统的运行情况表明，模板无关的内容提取算法对多通道爬虫系统具有实际意义。
+实际系统的运行情况表明，模板无关的内容抽取算法对多通道爬虫系统具有实际意义。
 }
 
 \newcommand{\ckeywords}{
-多通道；内容提取；模板无关的
+多通道；内容抽取；模板无关的
 }
 
 \newcommand{\eabstract}{
 With the explosive growth of the Internet, the Web has become a large platform
 for information publishing and consuming. It is essential to supervise the Internet
 public opinion effectively due to the rapid dissemination and extensive coverage.
+As the inherent semi-structured characteristics and large part of topic irrelevant
+noises, effectively extracting main content and filtering these noises is
+necessary and challenging.
 In a multi-channel crawler system which focuses on news, blog and forum, which are
 all representative information channels, we face the following challenges:
 1) enormous websites should be monitored;
@@ -71,7 +76,7 @@ Experimental result shows that our method achieves $96\%$ F\textsubscript{1}-mea
 on average and outperforms previous methods CETR and CETD.
 
 For typical forum websites, we utilize the ubiquitous date information in forum
-posts and propose a forum post extraction method (MiBAN). To compare the effectiveness
+posts and propose a forum post extraction method (PEAN). To compare the effectiveness
 with MiBAT, which also uses the date information to extract posts, we conduct
 experiments on various Chinese forums. Experimental result shows that our method
 achieves $94.7\%$ F\textsubscript{1}-measure on average and outperforms MiBAT.
@@ -79,8 +84,9 @@ achieves $94.7\%$ F\textsubscript{1}-measure on average and outperforms MiBAT.
 In order to verify the practicality of the methods, we design a framework for
 parallel multi-channel crawler system and implement a Web news crawler based on it.
 With the template independent content extraction approach, the crawler has the
-ability to crawl new websites without human efforts. The result shows that our
-method has practical value on multi-channel crawler system.  
+ability to crawl new websites without human efforts. The result shows that
+template independent content extraction methods have practical value on
+on multi-channel crawler system.
 }
 
 \newcommand{\ekeywords}{
@@ -88,4 +94,4 @@ multi-channel, content extraction, template independent
 }
 
 \makecover
-\clearpage 
+\clearpage
