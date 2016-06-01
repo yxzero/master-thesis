@@ -41,14 +41,20 @@ Gibson在2005年的研究\cite{gibson2005volume}显示，
 从网页中抽取核心内容，过滤这些噪声，不仅能够给用户提供“干净”的内容，
 也能节约爬虫系统的存储开销，减小索引规模，提升后续自然语言处理的效果。
 由于新闻和博客网页布局与内容抽取目标的相似性，本章将两者合并处理，
-提出一种基于有效字符的Web内容抽取方法，~\ref{sec:cevc-method}~节详述该方法CEVC，
-~\ref{sec:cevc-alternative}~节简述对比方法CETR和CETD，
+提出一种基于有效字符的Web内容抽取方法，~\ref{sec:cevc-method}~节详述该方法
+CEVC（Content Extraction via Valid Characters），
+~\ref{sec:cevc-other}~节简单介绍对比算法CETR，CETD和CEPR并给出算法实现细节，
 ~\ref{sec:cevc-experiment}~节进行对比实验并分析结果。
 
-\section{CEVC方法}
+\section{CEVC}
 \label{sec:cevc-method}
 
 \subsection{DOM}
+\label{subsec:dom}
+在网页内容抽取的研究工作中，为了利用HTML文档的结构信息，
+很多方法都是在DOM的基础上进行\citeup{yi2003eliminating,sun2011dom,wu2013web}
+这里对DOM做简单介绍。
+
 DOM（Document Object Model，文档对象模型）是一个跨平台语言无关的规范，
 用来表示和操作HTML，XHTML和XML的对象\footnote{http://www.w3.org/DOM/}。
 每个文档所包含的节点被组织为一个树型结构，称为DOM树。
@@ -77,15 +83,15 @@ HTML文档可以解析为DOM树，每个HTML标签对应一个DOM树节点，
  2.   <head> ... </head>
  3.   <body>
  4.     <div class="nav-wrap">
- 5.       <h1>News Title</h1>
+ 5.       <h1>Small Vintage Plane Crashes in Hudson River</h1>
  6.     </div>
  7.     <div> ... </div>
  8.     <div class="ep-content">
  9.       <a>
-10.         <span>From WWW</span>
+10.         <span>From Stefan Holt</span>
 11.       </a>
-12.       <p>First paragraph.</p>
-13.       <p>Second paragraph.</p>
+12.       <p>The plane was on a photo flight with two other planes ...</p>
+13.       <p>They say they saw the pilot try to get out but ...</p>
 14.     </div>
 15.   </body>
 16. </html>
@@ -95,29 +101,30 @@ HTML文档可以解析为DOM树，每个HTML标签对应一个DOM树节点，
 \begin{figure}[htbp]
 \centering
 \begin{tikzpicture}[
-sibling distance=8em,
-every node/.style={rectangle,rounded corners,draw},
+sibling distance=4cm,
+tag/.style={circle, draw},
+leaf/.style={rectangle, draw, text width=3.5cm}
 ]
-\node{<html>}
-  child{node{<head>}}
-  child{node{<body>}
-    child{node{<div.nav-wrap>}
-      child{node{<h1>}
-        child{node{\#News Title}}
+\node[tag]{html}
+  child{node[tag]{head}}
+  child{node[tag]{body}
+    child{node[tag]{div}
+      child{node[tag]{h1}
+        child{node[leaf]{Small Vintage Plane Crashes in Hudson River}}
       }
     }
-    child{node{<div>}}
-    child{node{<div.ep-content>}
-      child{node{<a>}
-        child{node{<span>}
-          child{node{\#From WWW}}
+    child{node[tag]{div}}
+    child{node[tag]{div}
+      child{node[tag]{a}
+        child{node[tag]{span}
+          child{node[leaf]{From Stefan Holt}}
         }
       }
-      child{node{<p>}
-        child{node{\#First paragraph}}
+      child{node[tag]{p}
+        child{node[leaf]{The plane was on a photo flight with two other planes}}
       }
-      child{node{<p>}
-        child{node{\#Second paragraph}}
+      child{node[tag]{p}
+        child{node[leaf]{They say they saw the pilot try to get out but}}
       }
     }
   }
@@ -217,31 +224,36 @@ ValidChars被作为属性，存储在节点中。
 \end{algorithm}
 
 经过算法~\ref{algo:cevc-count}~的处理，
-我们可以得到一个标注了各个节点ValidChars的HTML页面，如图~\ref{fig:validchar}~所示。
+我们可以得到一个标注了各个节点ValidChars的HTML页面，如图~\ref{fig:news-stepinto}~所示。
 
-\begin{figure}[t]
+\begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{figures/新闻划分}
+\includegraphics[width=0.9\textwidth]{news-stepinto}
 \caption{有效字符示例}
-\label{fig:validchar}
+\label{fig:news-stepinto}
 \end{figure}
 
 \subsection{定位核心内容块}
 经过大量实例分析，我们发现对于新闻、博客这类正文信息集中的网站，
 核心内容块都位于同一个父节点之下，通常表现为文本的段落。
-图~\ref{fig:validchar}~中的新闻正文位于\texttt{<div\#endText>}节点之下，
+图~\ref{fig:news-stepinto}~中的新闻正文位于\texttt{<div\#endText>}节点之下，
 是由\texttt{<p>}标签构成的段落。
+
+这里\texttt{div\#endText}的记号是CSS选择符，可以指定CSS样式规则作用在哪些DOM节点上，
+简单的用法是\texttt{div\#endText}选择\texttt{<div id='endText'>}这样的标签，
+而\texttt{div.text}选择\texttt{<div class='text'>}这样的标签。
+和正则表达式、XPath一样，CSS选择符也可以用来在HTML文档中描述提取规则。
 
 现在我们看到每个DOM节点上都标注了有效字符的个数，有效字符越多表明这个节点越可能是核心内容。
 但这个比较必须在同一个层次的兄弟节点间才有意义，因为有效字符数是嵌套包含的，
 毫无疑问\texttt{<body>}的有效字符数最多。
 如果从\texttt{<body>}节点开始，每次都选择有效字符数最多的子节点深入，
 就能定位出一条从\texttt{<body>}通往核心内容块的正确路径，
-如图~\ref{fig:validchar}~中红线标示的节点。
+如图~\ref{fig:news-stepinto}~中红线标示的节点。
 
 每次沿着有效字符数最大的子节点不断深入，意味着我们每一步放弃了信息量较小的兄弟节点。
 这个过程不能一直持续下去，否则会陷入到叶节点中，而错失最终的父节点。
-如图~\ref{fig:validchar}~所示，最后一步进入了一个\texttt{<p>}标签，
+如图~\ref{fig:news-stepinto}~所示，最后一步进入了一个\texttt{<p>}标签，
 而错失了真正的核心内容块\texttt{<div\#endText>}。
 我们需要定义一个指标，来判断何时停止向下深入的过程。
 
@@ -275,7 +287,7 @@ MCR计算过程
 \end{verbatim}
 \end{figure}
 
-如例~\ref{ex:mcr}~所示，每一行显示的都是图~\ref{fig:validchar}~中各层的最大子节点。
+如例~\ref{ex:mcr}~所示，每一行显示的都是图~\ref{fig:news-stepinto}~中各层的最大子节点。
 在到达\texttt{<body\#endText>}之前，MCR一直保持$0.9$以上的高比率，
 而\texttt{<body\#endText>}的MCR锐减到$0.14$，因为此时已深入到正文的一个段落中，
 这个段落无法代表正文的内容，\texttt{<body\#endText>}就是最终的核心内容块。
@@ -324,8 +336,618 @@ totalValidChars = 0 \;
 }
 \end{algorithm}
 
-\section{对比方法}
-\label{sec:cevc-alternative}
+\subsection{算法实现}
+本文中CEVC算法使用Python 2.7实现。
+
+面对HTML网页中普遍存在的代码错误，例如缺失结束标签、使用非标准的标签和错误的嵌套等，
+这里使用Python第三方库
+BeautifulSoup\footnote{http://www.crummy.com/software/BeautifulSoup/}
+来尽可能纠正这些错误。
+BeautifulSoup是一个可以从HTML或XML文件中提取数据的Python库，
+它为操作DOM提供了一套方便的接口，底层调用lxml等具体的解析器，
+能够处理有代码错误的网页。
+
+CEVC算法中需要识别停止词，这里使用了
+jieba\footnote{https://github.com/fxsjy/jieba}中的停止词模块。
+jieba（结巴中文分词）是一个开源的Python中文分词组件，MIT协议授权，
+支持多种分词模式。
+
+\section{对比算法}
+\label{sec:cevc-other}
+
+\subsection{CETR}
+Weninger等人于2010年提出CETR（Content Extraction via Tag Ratios）算法
+\citeup{weninger2010cetr}。
+
+CETR的基本概念是定义了Tag Ratio。
+它以行为单位读取HTML网页并处理，分别计算每一行的Tag Ratio，
+即非HTML标签字符个数与HTML标签个数的比值。
+如果遇到HTML标签个数为零的特殊情况，该行的Tag Ratio就是所有字符的个数。
+作者认为Tag Ratio越高，反映了文本密集程度越高，更有可能是网页的核心内容。
+
+通过计算可以得到每一行Tag Ratio的直方图，最直接的方法就是找到一个阈值，
+所有Tag Ratio高于此阈值的行被认为是有效内容，
+所有Tag Ratio低于此阈值的行被认为是噪声内容。
+如何找到这样一个合适的阈值，就成为了文章的主要研究内容。
+
+为了提升直方图的区分度，作者对数据进行了高斯平滑。
+标准的高斯平滑算法主要用来做图像处理，是应对连续数据的，作者重新实现为一维的离散操作。
+公式（~\ref{eq:cetr-kernel}~）是高斯核函数的构造过程，
+给定窗口大小为$2(\lceil \sigma \rceil) + 1$。
+
+\begin{equation}
+\label{eq:cetr-kernel}
+k_i = \sum_{j=-\lceil \sigma \rceil}^{\lceil \sigma \rceil}
+e^{\frac{-j^2}{2\sigma^2}}, 0 \leq i \leq 2(\lceil \sigma \rceil)
+\end{equation}
+
+公式（~\ref{eq:cetr-kernel2}~）中高斯核函数$k$被处理为$k'$。
+
+\begin{equation}
+\label{eq:cetr-kernel2}
+k_i' = \frac{k_i}{\sum_{j=0}^{\lceil \sigma \rceil}k_j},
+\lceil \sigma \rceil \leq i \leq 2(\lceil \sigma \rceil)
+\end{equation}
+
+最后高斯核函数$k'$和直方图$T$一起做卷积运算，形成平滑后的直方图$T'$，
+如公式（~\ref{eq:cetr-kernel3}~）所示。
+
+\begin{equation}
+\label{eq:cetr-kernel3}
+T_i' = \sum_{j=-\lceil \sigma \rceil}^{\lceil \sigma \rceil}
+k'_{j+\lceil \sigma \rceil} T_{i-j},
+\lceil \sigma \rceil \leq i \leq len(T)-\lceil \sigma \rceil
+\end{equation}
+
+上述以阈值划分直方图的方法，其缺陷是将Tag Ratio仅仅视为一组数据，
+而不是有序的序列，为了利用有序的信息，作者提出了一个二维模型。
+
+\begin{equation}
+\label{eq:cetr-kernel4}
+f'(T_i')=G_i=\frac{\sum_{j=0}^{\alpha} T_{i+j}'}{\alpha} - T_i',
+0 \leq i < len(T') - \alpha
+\end{equation}
+
+注意到$len(G) \neq len(T')$，实际上$len(G)=len(T')-1$
+因为$G$是一组数据的差异值。
+接着使用公式（~\ref{eq:cetr-kernel3}~）平滑$G$得到$G'$。
+最后计算$\hat{G}$使得$\hat{G_i}=\vert G_i' \vert$，对于$G'$中的每一个$i$。
+
+将平滑后的Tag Ratio $T'$和$T'$的Absolute Smoothed Derivatives $\hat{G}$
+联合组成二维模型，相比于一维数据，更加具有区分度。
+
+随后作者使用K-means聚类算法，将所有的样本点进行聚类，这里使用$k=3$。
+与一般的K-means聚类不同，将其中一个簇的中心点固定为二维坐标系的原点，
+这样可以使得剩余簇远离原点，并且很容易划分最终的结果，
+即中心点固定在原点的簇是噪声内容，而剩余簇代表有效内容。
+
+\textbf{实现细节}
+
+作者一共提出了三种算法，记为CETR-TM、CETR-KM和CETR。
+CETR-TM是阈值算法，CETR-KM是一维数据上的K-means聚类算法，
+CETR是二维数据上的K-means聚类算法。
+根据作者的实验对比，CETR的抽取性能最佳，也是本章中参与对比的算法。
+
+作者提供了Java实现的算法源代码\footnote{http://www3.nd.edu/~tweninge/cetr/}，
+我们对其进行了简单的包装，以Python接口调用并参与后续的评价指标计算。
+
+\subsection{CETD}
+Sun等人于2011年提出CETD（Content Extraction via Text Density）算法
+\citeup{sun2011dom}。
+
+CETD算法的核心概念是Text Density，它在DOM树的基础上定义，
+而不像CETR那样以行为单位处理，更能利用HTML的结构信息。
+Text Density的基础定义如~\ref{def:cetd-td}~所示。
+
+\begin{definition}
+\label{def:cetd-td}
+如果$i$是一个标签（对应DOM树中的一个节点），那么$i$的Text Density（$TD_i$）
+是其字符个数和标签个数的比值：
+\begin{equation}
+TD_i = \frac{C_i}{T_i}
+\end{equation}
+\end{definition}
+
+在进一步研究后，作者发现很多网页噪声由超链接组成，基于这样的观察，
+对每个节点计算了两个额外的统计指标：
+\begin{enumerate}
+\item \textit{LinkCharNumber}：子树中所有链接字符的个数
+\item \textit{LinkTagNumber}：子树中所有链接标签的个数
+\end{enumerate}
+
+在加入了链接的统计信息后，定义了Composite Text Density：
+
+\begin{definition}
+\label{def:cetd-ctd}
+如果$i$是一个标签（对应DOM树中的一个节点），
+那么$i$的Composite Text Density（$CTD_i$）是：
+\begin{equation}
+CTD_i = \frac{C_i}{T_i}\log_{ln(\frac{C_i}{\neg LC_i}LC_i + 
+\frac{LC_b}{C_b}C_i + e)}(\frac{C_i}{LC_i}\frac{T_i}{LT_i})
+\end{equation}
+\end{definition}
+
+定义~\ref{def:cetd-ctd}~中，$C_i$表示$i$节点下的所有字符个数，
+$T_i$表示$i$节点下的所有标签个数，$LC_i$表示链接字符个数，
+$\neg LC_i$表示非链接字符个数，$LT_i$表示链接标签个数，
+$LC_b$表示\texttt{<body>}节点下的所有链接字符个数，
+$C_b$表示\texttt{<body>}节点下的所有字符个数。
+遇到分母为零的情况，直接将分母设为1。
+
+为了从Text Density中区分噪音节点和内容节点，
+最直接的方法是以\texttt{<body>}的Text Density作为划分阈值。
+因为\texttt{<body>}比噪音节点包含更多的文本内容，
+又比内容节点包含更多的超链接，所以它是一个足够区分二者的中间值。
+
+数据平滑可以削峰填谷，增加区域内部的内聚性和区域之间的差异性，
+虽然一般来说数据平滑可以取得较好的结果，它仍然会丢失一些低文本密度的节点。
+为了改进传统的平滑、基于阈值划分的方法，作者提出了DensitySum的方法。
+
+DensitySum基于这样的观察，网页的内容块在DOM树结构中都属于一个祖先节点，
+并且内容节点的文本密度显著高于噪声节点。
+如果把一个节点的所有子节点的文本密度累加，称为DensitySum，
+那么DensitySum就会在内容节点上取得一个极高值。
+其定义如下：
+
+\begin{definition}
+\label{def:cetd-densitysum}
+如果$N$是一个标签（对应DOM树中的一个节点），$i$是$N$的一个子节点，
+那么$N$的DensitySum就是它所有子节点文本密度之和：
+\begin{equation}
+DensitySum_N = \sum_{i \in C} TextDensity_i
+\end{equation}
+\end{definition}
+
+\textbf{实现细节}
+
+作者一共提出了三种算法CETD-DS，CECTD-S和CECTD-DS。
+CETD-DS是基于Text Density和DensitySum的算法，
+CECTD-S是基于Composite Text Density和数据平滑的算法，
+CECTD-DS是基于Composite Text Density和DensitySum的算法。
+根据作者的实验对比，CECTD-DS的抽取性能最佳，也是本章中参与对比的算法。
+如无特殊说明，以后简称CECTD-DS为CETD算法。
+
+根据\cite{sun2011dom}给出的算法伪代码，我们用Python 2.7重新实现了CETD。
+为了处理HTML文档中的错误，同样使用了BeautifulSoup尽可能纠正。
+并通过BeautifulSoup，将HTML文档转化为内存中的DOM树，
+在进行计算和操作之前去除了所有\texttt{<script>}，\texttt{<style>}和\texttt{comment}。
+
+\subsection{CEPR}
+Wu等人于2013年提出了CEPR（Content Extraction via Path Ratios）算法
+\citeup{wu2013web}。
+
+CEPR算法的核心概念是\textbf{T}ext to Tag \textbf{P}ath \textbf{R}atio，或简称为TPR。
+作者首先在DOM树的基础上，提出Tag Path的概念，
+即从根节点到文本叶节点\footnote{文本全部分布在DOM树的叶节点上，见~\ref{subsec:dom}~节}
+的一条路径，由HTML标签构成。
+例如\texttt{div.div.div.h1}就是一条Tag Path。
+在Tag Path的基础上，提出Text to Tag Path Ratio：
+
+\begin{definition}
+\label{def:cepr-tpr}
+假设$p$是一条Tag Path，那么$p$的Text to Tag Path Ratio（TPR）就是：
+\begin{equation}
+TPR(p) = \frac{\sum_{v \in accNodes(p)}length(c(v))}{\vert accNodes(p) \vert}
+\end{equation}
+\end{definition}
+
+定义~\ref{def:cepr-tpr}~中，$accNodes(p)$是路径$p$能够访问的文本叶节点集合，
+$c(v)$是文本叶节点$v$的文本内容。
+TPR既是每条Tag Path的度量值，也是每个文本叶节点的度量值。
+在一般网页上，通常有这样的观察：
+\begin{enumerate}
+\item 内容节点通常有相似的Tag Path，而噪声节点也有相似的Tag Path；
+\item 内容节点通常包含更多的文本，而噪声节点通常包含较少的文本；
+\item 所有文本节点都是叶节点。
+\end{enumerate}
+显然，内容节点的TPR值较高而噪声节点的TPR值较低，可以用来抽取核心内容。
+TPR的阈值定为$\tau = \lambda \sigma(H')$，$\lambda$是调节参数，
+$\sigma(H')$是直方图的标准差。
+
+进一步的研究表明，网页内容会包含标点符号，而噪声则没有。
+除此之外，文本长度和标点符号个数在内容节点中的分布差异很大，在噪声节点中却很少变化。
+作者进一步提出了
+\textbf{E}xtended \textbf{T}ext to Tag \textbf{P}ath \textbf{R}atio（ETPR）：
+
+\begin{definition}
+\label{def:cepr-etpr}
+假设$p$是一条Tag Path，那么$p$的Extended Text to Tag Path Ratio（ETPR）就是：
+\begin{equation}
+ETPR(p) = TPR(p) \cdot 
+\frac{\sum_{v \in accNodes(p)}puncNum(c(v))}{\vert accNodes(p) \vert}
+\cdot \sigma_{cs} \cdot \sigma_{ps}
+\end{equation}
+\end{definition}
+
+定义~\ref{def:cepr-etpr}~中$puncNum(c(v))$是$v$中标点符号的个数，
+$\sigma_cs$和$\sigma_ps$分别是路径$p$能访问的文本叶节点集合中
+文本长度和标点符号个数的标准差。
+
+在\cite{weninger2010cetr}的高斯平滑算法基础上，
+作者提出以编辑距离作为权重，改善平滑效果。
+即公式（~\ref{eq:cetr-kernel3}~）的卷积运算修改为公式（~\ref{eq:cepr-kernel}~）。
+
+\begin{equation}
+\label{eq:cepr-kernel}
+H_i' = \sum_{j=-r}^{r} w_{ij} k_j' H_{i-j}, r \leq i \leq len(H)-r
+\end{equation}
+
+其中权重定义为：
+\begin{equation}
+\label{eq:cepr-w}
+w_{ij} = 
+\left\{\begin{matrix}
+1, p_i = p_j \\ 
+\frac{1}{(dist(p_i, p_j))^\alpha}, p_i \neq p_j
+\end{matrix}\right.
+\end{equation}
+
+公式（~\ref{eq:cepr-w}~）中的$dist(p_i, p_j)$是路径$p_i$和$p_j$的
+编辑距离\citeup{levenshtein1966binary}，
+$\alpha$是调节编辑距离对平滑贡献的参数。
+
+\textbf{实现细节}
+
+作者一共提出了三种算法CEPR-TPR，CEPR-ETRP和CEPR-SETPR。
+CEPR-TPR是基于TPR的算法，CEPR-ETPR是基于扩展的ETPR的算法，
+CEPR-SETPR是基于ETPR并进行加权高斯平滑处理后的算法。
+根据作者的实验对比，CEPR-SETPR的抽取性能最佳，也是本章中参与对比的算法。
+如无特殊说明，以后简称CEPR-SETPR为CEPR算法。
+
+根据\cite{wu2013web}给出的算法伪代码，我们用Python 2.7重新实现了CEPR。
+同样使用了BeautifulSoup来处理HTML文档，转化为DOM树结构。
+CEPR算法需要判断标点符号，这里使用了Python标准库的\texttt{string.punctuation}
+来定义英文标点符号，并补充了一个中文标点符号列表。
+
+我们在小规模数据集上进行了参数调整实验，确定了和\cite{wu2013web}中一致的参数配置：
+$\lambda=0.8$，$\alpha=1$和$r=1$。
 
 \section{实验与分析}
 \label{sec:cevc-experiment}
+
+\subsection{评价指标}
+为了验证算法的抽取效果，我们定义标准评价指标准确率Precision、召回率Recall和
+F\textsubscript{1}。
+通过比较算法抽取的文本$e$和金标准的文本$g$，Precision、Recall和
+F\textsubscript{1}可以如下计算：
+
+\begin{equation}
+P = \frac{LCS(e,g).length}{e.length}, R = \frac{LCS(e,g).length}{g.length}
+\end{equation}
+\begin{equation}
+F_1 = \frac{2 \times P \times R}{P + R}
+\end{equation}
+
+对于中文文档，视为字符的序列而不进行分词处理，
+因为中文分词需要额外的依赖，而且CEVC算法重在对有效字符的统计而不需要词的信息。
+$LCS(e,g)$是$e$和$g$的最长公共子序列，
+文档中两个相同的字符如果位置顺序不同，也会被LCS的计算区分开来。
+相比于\cite{weninger2010cetr}中使用的计算方法，把两个文档的词视为两个集合，
+该方法利用了不同词的位置信息而更加准确。
+
+除了标准评价指标外，这里给出另一个常用的评价方法Score。
+Score在\cite{sun2011dom}和\cite{wu2013web}中都提到过，
+是为了替换CleanEval中运算开销很大的
+Levenshtein Distance\citeup{levenshtein1966binary}
+（对齐两个字符串所需要的插入、删除操作次数，不允许替换），
+而使用最长公共子序列计算产生的。
+其定义如下：
+
+\begin{equation}
+Score(e,g) = \frac{LCS(e,g).length}{e.length + g.length - LCS(e,g).length}
+= \frac{1}{\frac{1}{P} + \frac{1}{R} - 1}
+\end{equation}
+
+\subsection{数据集}
+
+为了在验证内容抽取算法对当今中文新闻、博客网站的实际抽取效果，
+我们从知名的网址导航网站hao123\footnote{https://www.hao123.com/}
+和360导航\footnote{https://hao.360.cn/}
+中任意选取了30个知名的新闻网站和博客网站作为测试对象。
+网站详情和网页数量见表~\ref{tbl:news-dataset}~和表~\ref{tbl:blog-dataset}~。
+
+对每个网站，我们分别编写爬虫脚本下载原始HTML网页，
+然后通过人工编写的包装器抽取网页正文作为金标准，并存储为UTF-8编码的文本文件。
+为了确保数据集的质量，还对包装器抽取的文本进行了人工审核，
+排除了抽取错误的网页和正文不足100字的网页。
+15个新闻网站和15个博客网站总计含有1270个有效网页。
+
+\begin{table}[htbp]
+\centering
+\begin{minipage}{0.45\textwidth}
+\caption{新闻数据集}
+\label{tbl:news-dataset}
+\vspace{0.5em}\centering\wuhao
+\begin{tabular}{lll}
+\toprule[1.5pt]
+网站 & 网址 & 数量 \\
+\midrule[1pt]
+网易新闻 & news.163.com & 47 \\
+央视网新闻 & news.cctv.com & 45 \\
+凤凰资讯 & news.ifeng.com & 47 \\
+腾讯新闻 & news.qq.com & 53 \\
+新浪新闻 & news.sina.com.cn & 39 \\
+搜狐新闻 & news.sohu.com & 34 \\
+中国军网 & www.81.cn & 48 \\
+参考消息 & www.cankaoxiaoxi.com & 40 \\
+中国信息网 & www.chinanews.com & 46 \\
+央广网 & www.cnr.cn & 44 \\
+环球网 & www.huanqiu.com & 43 \\
+人民网 & www.people.com.cn & 39 \\
+南方网 & www.southcn.com & 50 \\
+新华网 & www.xinhuanet.com & 39 \\
+联合早报 & www.zaobao.com & 36 \\
+总计 & - & 650 \\
+\bottomrule[1.5pt]
+\end{tabular}
+\end{minipage}
+\hfill
+\begin{minipage}{0.45\textwidth}
+\caption{博客数据集}
+\label{tbl:blog-dataset}
+\vspace{0.5em}\centering\wuhao
+\begin{tabular}{lll}
+\toprule[1.5pt]
+网站 & 网址 & 数量 \\
+\midrule[1pt]
+网易博客 & blog.163.com & 48 \\
+财经网博客 & blog.caijing.com.cn & 45 \\
+中金博客 & blog.cnfol.com & 31 \\
+东方财富博客 & blog.eastmoney.com & 46 \\
+和讯博客 & blog.hexun.com & 45 \\
+凤凰博客 & blog.ifeng.com & 45 \\
+瑞丽博客 & blog.rayli.com.cn & 39 \\
+科学网博客 & blog.sciencenet.cn & 47 \\
+新浪博客 & blog.sina.com.cn & 42 \\
+搜狐博客 & blog.sohu.com & 29 \\
+天涯博客 & blog.tianya.cn & 50 \\
+博客大巴 & www.blogbus.com & 13 \\
+博客中国 & www.blogchina.com & 45 \\
+博客网 & www.bokee.com & 46 \\
+博客日报 & www.bokerb.com & 49 \\
+总计 & - & 620 \\
+\bottomrule[1.5pt]
+\end{tabular}
+\end{minipage}
+\end{table}
+
+\subsection{参数调整}
+CEVC算法中包含一个阈值参数$\alpha$，
+它决定了什么时候终止算法~\ref{algo:cevc-stepinto}~中的向下深入过程。
+$\alpha$的取值从0到1，如果它太低的话，终止条件就会很苛刻，
+算法会因过于深入DOM树底层而返回一小段正文中的文本。
+这种情况下因为损失了其它核心内容，召回率会下降。
+另一方面，如果为$\alpha$设定一个过高的值，算法过早终止，
+会返回不相关的内容，从而影响最终的准确率。
+
+为了试验抽取性能和参数$\alpha$的关系，我们从各个网站中抽取少量网页进行了测试，
+具体结果如图~\ref{fig:cevc-threshold}~所示。
+召回率随着$\alpha$的升高而升高，准确率随着$\alpha$的升高而降低，总体趋势符合之前的期望。
+从图中可以看到，作为一个综合性指标，
+F\textsubscript{1}在$\alpha$从0.3增长到0.6的过程中都很稳定，保持在0.95以上。
+CEVC算法对参数的变化并不敏感，因此在后续的实验中，设置$\alpha$为0.5。
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[xlabel=$\alpha$, ylabel=Score (\%), legend pos=south east]
+\addplot[color=blue, mark=square]
+coordinates{
+  (0, 99.3)(0.1, 99.4)(0.2, 99.4)(0.3, 99.5)(0.4, 99.5)(0.5, 99.5)
+  (0.6, 99.5)(0.7, 97.5)(0.8, 97.3)(0.9, 95.0)(1.0, 88.8)
+};
+
+\addplot[color=blue, mark=triangle]
+coordinates{
+  (0, 61.9)(0.1, 79.0)(0.2, 92.3)(0.3, 96.7)(0.4, 96.7)(0.5, 96.7)
+  (0.6, 96.7)(0.7, 96.7)(0.8, 96.7)(0.9, 96.7)(1.0, 96.9)
+};
+
+\addplot[color=blue, mark=star]
+coordinates{
+  (0, 76.2)(0.1, 88.0)(0.2, 95.8)(0.3, 98.1)(0.4, 98.1)(0.5, 98.1)
+  (0.6, 98.1)(0.7, 97.1)(0.8, 97.0)(0.9, 95.9)(1.0, 92.7)
+};
+
+\legend{Precision, Recall, F\textsubscript{1}}
+\end{axis}
+\end{tikzpicture}
+\caption{Precision, Recall和F\textsubscript{1}
+随参数$\alpha$的变化情况}
+\label{fig:cevc-threshold}
+\end{figure}
+
+\subsection{实验结果}
+首先对CEVC算法的抽取性能进行实验评估，
+表~\ref{tbl:cevc-cevc}~给出了CEVC在新闻和博客数据集上的实验结果，
+包含了Precision、Recall、F\textsubscript{1}和Score四项指标。
+
+\begin{table}[htbp]
+\caption{CEVC在新闻和博客数据集上的实验结果}
+\label{tbl:cevc-cevc}
+\vspace{0.5em}\centering\wuhao
+\begin{tabular}{lllllll}
+\toprule[1.5pt]
+网站 & 网址 & 类型 & Precision & Recall & F\textsubscript{1} & Score \\
+\midrule[1pt]
+环球网 & www.huanqiu.com & news & 91.1\% & 96.4\% & 93.7\% & 88.1\% \\
+人民网 & www.people.com.cn & news & 96.2\% & 99.0\% & 97.6\% & 95.3\% \\
+凤凰资讯 & news.ifeng.com & news & 99.5\% & 99.9\% & 99.7\% & 99.4\% \\
+央视网新闻 & news.cctv.com & news & 93.7\% & 99.9\% & 96.7\% & 93.7\% \\
+联合早报 & www.zaobao.com & news & 97.5\% & 99.1\% & 98.3\% & 96.7\% \\
+新华网 & www.xinhuanet.com & news & 98.6\% & 99.9\% & 99.2\% & 98.5\% \\
+中国信息网 & www.chinanews.com & news & 98.1\% & 99.9\% & 99.0\% & 98.0\% \\
+中国军网 & www.81.cn & news & 97.6\% & 100.0\% & 98.8\% & 97.6\% \\
+网易新闻 & news.163.com & news & 94.7\% & 98.8\% & 96.7\% & 93.7\% \\
+腾讯新闻 & news.qq.com & news & 93.5\% & 99.9\% & 96.6\% & 93.4\% \\
+央广网 & www.cnr.cn & news & 97.7\% & 99.5\% & 98.6\% & 97.2\% \\
+参考消息 & www.cankaoxiaoxi.com & news & 95.3\% & 95.4\% & 95.3\% & 91.1\% \\
+搜狐新闻 & news.sohu.com & news & 97.5\% & 97.8\% & 97.6\% & 95.4\% \\
+南方网 & www.southcn.com & news & 91.5\% & 99.3\% & 95.2\% & 90.9\% \\
+新浪新闻 & news.sina.com.cn & news & 96.3\% & 100.0\% & 98.1\% & 96.3\% \\
+新闻 & - & - & 95.8\% & 99.1\% & 97.4\% & 95.0\% \\
+\hline
+和讯博客 & blog.hexun.com & blog & 96.4\% & 97.3\% & 96.8\% & 93.9\% \\
+瑞丽博客 & blog.rayli.com.cn & blog & 86.6\% & 97.1\% & 91.6\% & 84.5\% \\
+凤凰博客 & blog.ifeng.com & blog & 96.9\% & 93.9\% & 95.3\% & 91.1\% \\
+中金博客 & blog.cnfol.com & blog & 86.8\% & 89.2\% & 88.0\% & 78.5\% \\
+财经网博客 & blog.caijing.com.cn & blog & 96.3\% & 95.9\% & 96.1\% & 92.5\% \\
+博客大巴 & www.blogbus.com & blog & 91.8\% & 100.0\% & 95.7\% & 91.8\% \\
+新浪博客 & blog.sina.com.cn & blog & 94.3\% & 86.1\% & 90.0\% & 81.9\% \\
+博客日报 & www.bokerb.com & blog & 94.3\% & 97.0\% & 95.7\% & 91.7\% \\
+科学网博客 & blog.sciencenet.cn & blog & 94.8\% & 95.0\% & 94.9\% & 90.3\% \\
+天涯博客 & blog.tianya.cn & blog & 93.8\% & 97.8\% & 95.8\% & 91.9\% \\
+博客中国 & www.blogchina.com & blog & 98.4\% & 99.6\% & 99.0\% & 98.0\% \\
+搜狐博客 & blog.sohu.com & blog & 94.4\% & 92.4\% & 93.4\% & 87.6\% \\
+东方财富博客 & blog.eastmoney.com & blog & 93.3\% & 97.1\% & 95.2\% & 90.8\% \\
+网易博客 & blog.163.com & blog & 81.7\% & 92.5\% & 86.7\% & 76.6\% \\
+博客网 & www.bokee.com & blog & 93.5\% & 100.0\% & 96.6\% & 93.5\% \\
+博客 & - & - & 93.4\% & 95.5\% & 94.4\% & 89.4\% \\
+\hline
+总体 & - & - & 94.5\% & 97.2\% & 95.8\% & 92.0\% \\
+\bottomrule[1.5pt]
+\end{tabular}
+\end{table}
+
+水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
+水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
+水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
+水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
+水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
+水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
+
+然后在同样的数据集上分别测试CETR、CETD和CEPR，并和CEVC算法做比较，
+如表~\ref{tbl:cevc-all}~所示。
+为了节省篇幅，这里只列出了两个综合性指标F\textsubscript{1}和Score，
+以F\textsubscript{1}/Score的形式给出。
+
+\begin{table}[htbp]
+\caption{CETR、CETD、CEPR和CEVC的对比结果}
+\label{tbl:cevc-all}
+\vspace{0.5em}\centering\wuhao
+\begin{tabular}{lllll}
+\toprule[1.5pt]
+网站 & CETR & CETD & CEPR & CEVC \\
+\midrule[1pt]
+网易新闻 & 68.0\%/51.5\% & 96.9\%/93.9\% & \textbf{97.9\%}/\textbf{95.9\%} & 96.7\%/93.7\% \\
+央视网新闻 & 80.4\%/67.3\% & 95.8\%/91.9\% & \textbf{99.1\%}/\textbf{98.3\%} & 96.7\%/93.7\% \\
+凤凰资讯 & 50.8\%/34.0\% & 99.5\%/99.1\% & 95.6\%/91.6\% & \textbf{99.7\%}/\textbf{99.4\%} \\
+腾讯新闻 & 80.0\%/66.7\% & 96.4\%/93.0\% & \textbf{96.9\%}/\textbf{93.9\%} & 96.6\%/93.4\% \\
+新浪新闻 & 81.2\%/68.4\% & \textbf{98.1\%}/96.2\% & 93.6\%/88.0\% & \textbf{98.1\%}/\textbf{96.3\%} \\
+搜狐新闻 & 73.0\%/57.4\% & \textbf{98.6\%}/\textbf{97.3\%} & 96.0\%/92.3\% & 97.6\%/95.4\% \\
+中国军网 & 89.6\%/81.2\% & 98.6\%/97.3\% & 97.1\%/94.3\% & \textbf{98.8\%}/\textbf{97.6\%} \\
+参考消息 & 44.9\%/28.9\% & \textbf{99.8\%}/\textbf{99.7\%} & 92.6\%/86.3\% & 95.3\%/91.1\% \\
+中国信息网 & 86.5\%/76.2\% & \textbf{99.0\%}/\textbf{98.1\%} & 98.9\%/97.8\% & \textbf{99.0\%}/98.0\% \\
+央广网 & 85.6\%/74.8\% & 98.5\%/97.1\% & 92.0\%/85.2\% & \textbf{98.6\%}/\textbf{97.2\%} \\
+环球网 & 74.7\%/59.6\% & 92.1\%/85.3\% & \textbf{97.0\%}/\textbf{94.3\%} & 93.7\%/88.1\% \\
+人民网 & 85.9\%/75.3\% & 96.9\%/93.9\% & 89.6\%/81.2\% & \textbf{97.6\%}/\textbf{95.3\%} \\
+南方网 & 87.8\%/78.3\% & \textbf{95.5\%}/\textbf{91.4\%} & 93.3\%/87.5\% & 95.2\%/90.9\% \\
+新华网 & 97.1\%/94.3\% & \textbf{99.2\%}/\textbf{98.5\%} & 99.0\%/98.0\% & \textbf{99.2\%}/\textbf{98.5\%} \\
+联合早报 & 0.0\%/0.0\% & 96.6\%/93.3\% & 91.3\%/84.0\% & \textbf{98.3\%}/\textbf{96.7\%} \\
+新闻 & 74.1\%/58.9\% & \textbf{97.4\%}/94.9\% & 95.6\%/91.6\% & \textbf{97.4\%}/\textbf{95.0\%} \\
+\hline
+网易博客 & 26.7\%/15.4\% & 53.4\%/36.4\% & 17.4\%/9.5\% & \textbf{86.7\%}/\textbf{76.6\%} \\
+财经网博客 & 85.1\%/74.1\% & 93.7\%/88.2\% & 94.0\%/88.6\% & \textbf{96.1\%}/\textbf{92.5\%} \\
+中金博客 & 57.3\%/40.2\% & 87.0\%/76.9\% & 62.1\%/45.0\% & \textbf{88.0\%}/\textbf{78.5\%} \\
+东方财富博客 & 62.0\%/45.0\% & 87.9\%/78.4\% & 92.1\%/85.3\% & \textbf{95.2\%}/\textbf{90.8\%} \\
+和讯博客 & 50.8\%/34.0\% & 87.6\%/77.9\% & 82.7\%/70.4\% & \textbf{96.8\%}/\textbf{93.9\%} \\
+凤凰博客 & 65.7\%/49.0\% & \textbf{96.4\%}/\textbf{93.1\%} & 89.3\%/80.7\% & 95.3\%/91.1\% \\
+瑞丽博客 & 59.8\%/42.6\% & 88.4\%/79.2\% & 88.8\%/79.9\% & \textbf{91.6\%}/\textbf{84.5\%} \\
+科学网博客 & 64.7\%/47.9\% & 89.4\%/80.8\% & 91.0\%/83.6\% & \textbf{94.9\%}/\textbf{90.3\%} \\
+新浪博客 & 71.3\%/55.3\% & \textbf{90.0\%}/81.8\% & 86.4\%/76.1\% & \textbf{90.0\%}/\textbf{81.9\%} \\
+搜狐博客 & 74.9\%/59.8\% & 93.1\%/87.0\% & 86.0\%/75.4\% & \textbf{93.4\%}/\textbf{87.6\%} \\
+天涯博客 & 82.7\%/70.4\% & \textbf{98.9\%}/\textbf{97.8\%} & 91.3\%/83.9\% & 95.8\%/91.9\% \\
+博客大巴 & 77.2\%/62.9\% & 95.4\%/91.2\% & \textbf{97.1\%}/\textbf{94.4\%} & 95.7\%/91.8\% \\
+博客中国 & 90.2\%/82.2\% & 98.3\%/96.7\% & 93.6\%/88.0\% & \textbf{99.0\%}/\textbf{98.0\%} \\
+博客网 & 80.1\%/66.8\% & 95.6\%/91.5\% & 86.9\%/76.8\% & \textbf{96.6\%}/\textbf{93.5\%} \\
+博客日报 & 82.8\%/70.7\% & \textbf{97.2\%}/\textbf{94.5\%} & 96.5\%/93.2\% & 95.7\%/91.7\% \\
+博客 & 64.3\%/47.4\% & 88.9\%/80.0\% & 83.9\%/72.3\% & \textbf{94.4\%}/\textbf{89.4\%} \\
+\hline
+总体 & 68.8\%/52.4\% & 92.8\%/86.6\% & 89.5\%/81.1\% & \textbf{95.8\%}/\textbf{92.0\%} \\
+\bottomrule[1.5pt]
+\end{tabular}
+\end{table}
+
+水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
+水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
+水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
+水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
+水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
+水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}
+\begin{groupplot}[
+group style={group size=2 by 2, vertical sep=1.5cm},
+legend style={at={(1, 0.7)},anchor=north east},
+height=0.4\textwidth,
+]
+
+\nextgroupplot[
+title=Precision,
+symbolic x coords={News, Blog, Average},
+xtick=data,
+]
+\addplot[color=blue, mark=square*, dashed]
+coordinates{(News, 60.7) (Blog, 51.0) (Average, 55.4)};
+\addplot[color=green, mark=triangle*, dashed]
+coordinates{(News, 95.3) (Blog, 85.6) (Average, 90.1)};
+\addplot[color=orange, mark=otimes*, thick]
+coordinates{(News, 92.7) (Blog, 85.7) (Average, 89.2)};
+\addplot[color=red, mark=o, thick]
+coordinates{(News, 95.8) (Blog, 93.4) (Average, 94.5)};
+\legend{CETR, CETD, CEPR, CEVC}
+
+\nextgroupplot[
+title=Recall,
+symbolic x coords={News, Blog, Average},
+xtick=data,
+]
+\addplot[color=blue, mark=square*, dashed]
+coordinates{(News, 95.1) (Blog, 86.9) (Average, 90.8)};
+\addplot[color=green, mark=triangle*, dashed]
+coordinates{(News, 99.6) (Blog, 92.4) (Average, 95.8)};
+\addplot[color=orange, mark=otimes*, thick]
+coordinates{(News, 98.7) (Blog, 82.2) (Average, 89.9)};
+\addplot[color=red, mark=o, thick]
+coordinates{(News, 99.1) (Blog, 95.5) (Average, 97.2)};
+
+
+\nextgroupplot[
+title=F\textsubscript{1},
+symbolic x coords={News, Blog, Average},
+xtick=data,
+]
+\addplot[color=blue, mark=square*, dashed]
+coordinates{(News, 74.1) (Blog, 64.3) (Average, 68.8)};
+\addplot[color=green, mark=triangle*, dashed]
+coordinates{(News, 97.4) (Blog, 88.9) (Average, 92.8)};
+\addplot[color=orange, mark=otimes*, thick]
+coordinates{(News, 95.6) (Blog, 83.9) (Average, 89.5)};
+\addplot[color=red, mark=o, thick]
+coordinates{(News, 97.4) (Blog, 94.4) (Average, 95.8)};
+
+\nextgroupplot[
+title=Score,
+symbolic x coords={News, Blog, Average},
+xtick=data,
+]
+\addplot[color=blue, mark=square*, dashed]
+coordinates{(News, 58.9) (Blog, 47.4) (Average, 52.4)};
+\addplot[color=green, mark=triangle*, dashed]
+coordinates{(News, 94.9) (Blog, 80.0) (Average, 86.6)};
+\addplot[color=orange, mark=otimes*, thick]
+coordinates{(News, 91.6) (Blog, 72.3) (Average, 81.1)};
+\addplot[color=red, mark=o, thick]
+coordinates{(News, 95.0) (Blog, 89.4) (Average, 92.0)};
+
+\end{groupplot}
+\end{tikzpicture}
+\caption{CETR、CETD、CEPR和CEVC在新闻、博客数据集上的各项指标}
+\label{fig:cevc-prfs}
+\end{figure}
+
+
+
+\subsection{结果分析}

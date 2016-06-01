@@ -1,12 +1,38 @@
-% !Mode:: "TeX:UTF-8"
+% All the packages.
+
+% Page Layout
+\usepackage[
+a4paper,
+text={150true mm, 224true mm},
+top=35.5true mm,
+left=30true mm,
+head=5true mm,
+headsep=2.5true mm,
+foot=8.5true mm,
+]{geometry}
+\usepackage{titlesec}
+\usepackage{titletoc}
+\usepackage{fancyhdr}
+
+% Font
 \usepackage{xeCJK}
-\usepackage{tabularx}
+\setCJKfamilyfont{songticu}{Songti SC Bold}
+\newcommand{\songticu}{\CJKfamily{songticu}}
+\setmainfont{Times New Roman}
+\setsansfont{Arial}
+\usepackage{fontspec}
+
+% Figures
 \usepackage{graphicx}
 \usepackage{tikz}
-\usepackage[a4paper,text={150true mm,224true mm},top=35.5true mm,left=30true mm,head=5true mm,headsep=2.5true mm,foot=8.5true mm]{geometry}
-\usepackage{titlesec}               % 控制标题的宏包
-\usepackage{titletoc}                   % 控制目录的宏包
-\usepackage{fancyhdr}                   % fancyhdr宏包 页眉和页脚的相关定义
+\usetikzlibrary{positioning}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.13}
+\usepgfplotslibrary{groupplots}
+
+% Tables
+\usepackage{tabularx}
+
 \usepackage{color}          % 支持彩色
 \usepackage{amsmath}        % AMSLaTeX宏包 用来排出更加漂亮的公式
 \usepackage{amssymb}
@@ -20,56 +46,23 @@
 \usepackage[sort&compress,numbers]{natbib}% 支持引用缩写的宏包
 \usepackage{enumitem}       %使用enumitem宏包,改变列表项的格式
 \usepackage{calc}           %长度可以用+ - * / 进行计算
-%\usepackage{txfonts}
-\usepackage{fontspec}
-\usepackage[amsmath,thmmarks,hyperref]{ntheorem}% 定理类环境宏包，其中 amsmath 选项用来兼容 AMS LaTeX 的宏包
-\usepackage{etoolbox}
-\AtBeginDocument{%
-  \apptocmd\thebibliography{\interlinepenalty=-5000 }{}{}%
-}
 
+% 定理类环境宏包，其中 amsmath 选项用来兼容 AMS LaTeX 的宏包
+\usepackage[amsmath,thmmarks,hyperref]{ntheorem}
 
-\usepackage[xetex,
-            bookmarksnumbered=true,
-            bookmarksopen=true,
-            colorlinks=false,
-            pdfborder={0 0 1},
-            citecolor=blue,
-            linkcolor=red,
-            anchorcolor=green,
-            urlcolor=blue,
-            breaklinks=true,
-            naturalnames  %与algorithm2e宏包协调
-            ]{hyperref}
+\usepackage[
+xetex,
+bookmarksnumbered=true,
+bookmarksopen=true,
+colorlinks=false,
+pdfborder={0 0 1},
+citecolor=blue,
+linkcolor=red,
+anchorcolor=green,
+urlcolor=blue,
+breaklinks=true,
+naturalnames  %与algorithm2e宏包协调
+]{hyperref}
 
-\defaultfontfeatures{Mapping=tex-text}
-\xeCJKsetemboldenfactor{1}%只对随后定义的CJK字体有效
-\setCJKfamilyfont{hei}{STHeiti}
-\xeCJKsetemboldenfactor{4}
-\setCJKfamilyfont{song}{STSong}
-\xeCJKsetemboldenfactor{1}
-\setCJKfamilyfont{fs}{STFangsong}
-\setCJKfamilyfont{kai}{STKaiti}
-\setCJKmainfont{STSong}
-\setCJKsansfont{STHeiti}
-\setmainfont{Times New Roman}
-\setsansfont{Arial}
-\newcommand{\hei}{\CJKfamily{hei}}% 黑体   (Windows自带simhei.ttf)
-\newcommand{\song}{\CJKfamily{song}}    % 宋体   (Windows自带simsun.ttf)
-\newcommand{\fs}{\CJKfamily{fs}}        % 仿宋体 (Windows自带simfs.ttf)
-\newcommand{\kaishu}{\CJKfamily{kai}}      % 楷体   (Windows自带simkai.ttf)
-\newfontfamily\arial{Arial}
-\newfontfamily\timesnewroman{Times New Roman}
-
-
-\usepackage[plainruled,linesnumbered,algochapter]{algorithm2e}  % 算法的宏包，注意宏包兼容性，先后顺序为float、hyperref、algorithm(2e)，否则无法生成算法列表
-\usepackage{xltxtra}
-\usepackage{listings}
-\lstset{
-%basicstyle=\small\ttfamily,
-columns=flexible,
-breaklines=true
-}
-\newcommand{\emultiline}[2][c]{\renewcommand{\arraystretch}{1}\begin{tabular}[#1]{@{}l@{}}#2\end{tabular} \renewcommand{\arraystretch}{1.3} }
-\newcommand{\citeayu}[1]{\citeauthor{#1}~(\citeyear{#1})\citeup{#1}}
-
+% 算法的宏包，注意宏包兼容性，先后顺序为float、hyperref、algorithm(2e)，否则无法生成算法列表
+\usepackage[plainruled,linesnumbered,algochapter]{algorithm2e}

@@ -1,21 +1,30 @@
-% !Mode:: "TeX:UTF-8" 
+
+\newcommand{\yihao}{\fontsize{26pt}{26pt}\selectfont}
+\newcommand{\xiaoyi}{\fontsize{24pt}{24pt}\selectfont}
+\newcommand{\erhao}{\fontsize{22pt}{1.25\baselineskip}\selectfont}
+\newcommand{\xiaoer}{\fontsize{18pt}{18pt}\selectfont}
+\newcommand{\sanhao}{\fontsize{16pt}{16pt}\selectfont}
+\newcommand{\xiaosan}{\fontsize{15pt}{15pt}\selectfont}
+\newcommand{\sihao}{\fontsize{14pt}{14pt}\selectfont}
+\newcommand{\xiaosi}{\fontsize{12pt}{12pt}\selectfont}
+\newcommand{\wuhao}{\fontsize{10.5pt}{10.5pt}\selectfont}
+\newcommand{\xiaowu}{\fontsize{9pt}{9pt}\selectfont}
+
+% 研究生院只对图、表、公式的编号做了具体要求
+% 使图编号为 7-1 的格式
+\renewcommand{\thefigure}{\arabic{chapter}-\arabic{figure}}
+% 使表编号为 7-1 的格式
+\renewcommand{\thetable}{\arabic{chapter}-\arabic{table}}
+% 使公式编号为 7-1 的格式
+\renewcommand{\theequation}{\arabic{chapter}-\arabic{equation}}
+% Algorithm -> 算法
+\renewcommand{\algorithmcfname}{算法}
 
 \theoremstyle{plain}
-\theorembodyfont{\song\rmfamily}
-\theoremheaderfont{\hei\rmfamily}
-\newtheorem{definition}{\hei 定义}[chapter]
-\newtheorem{example}{\hei 例}[chapter]
-\newtheorem{algo}{\hei 算法}[chapter]
-\newtheorem{theorem}{\hei 定理}[chapter]
-\newtheorem{axiom}{\hei 公理}[chapter]
-\newtheorem{proposition}{\hei 命题}[chapter]
-\newtheorem{lemma}{\hei 引理}[chapter]
-\newtheorem{corollary}{\hei 推论}[chapter]
-\newtheorem{remark}{\hei 注解}[chapter]
-\newenvironment{proof}{\noindent{\hei 证明：}}{\hfill $ \square $ \vskip 4mm}
-\theoremsymbol{$\square$}
-\setlength{\theorempreskipamount}{0pt}
-\setlength{\theorempostskipamount}{-2pt}
+\theorembodyfont{\songti\rmfamily}
+\theoremheaderfont{\heiti\rmfamily}
+\newtheorem{definition}{\heiti 定义}[chapter]
+\newtheorem{example}{\heiti 例}[chapter]
 
 \allowdisplaybreaks[4]
 
@@ -23,24 +32,23 @@
 
 \arraycolsep=1.6pt
 
-\renewcommand\contentsname{\hei 目~~~~录}
-
-\ctexset{chapter={number={\arabic{chapter}}}}
+\CTEXsetup[number={\arabic{chapter}}]{chapter}
 \renewcommand\chaptername{第~\thechapter~章}
 
-\setcounter{secnumdepth}{4} \setcounter{tocdepth}{2}
+\setcounter{secnumdepth}{4}
+\setcounter{tocdepth}{2}
 
-
-\titleformat{\chapter}{\center\xiaoer\hei}{\chaptertitlename}{0.5em}{}
+\titleformat{\chapter}{\center\xiaoer\heiti}{\chaptertitlename}{0.5em}{}
 \titlespacing{\chapter}{0pt}{-5.5mm}{8mm}
-\titleformat{\section}{\xiaosan\hei}{\thesection}{0.5em}{}
+\titleformat{\section}{\xiaosan\heiti}{\thesection}{0.5em}{}
 \titlespacing{\section}{0pt}{4.5mm}{4.5mm}
-\titleformat{\subsection}{\sihao\hei}{\thesubsection}{0.5em}{}
+\titleformat{\subsection}{\sihao\heiti}{\thesubsection}{0.5em}{}
 \titlespacing{\subsection}{0pt}{4mm}{4mm}
-\titleformat{\subsubsection}{\xiaosi\hei}{\thesubsubsection}{0.5em}{}
+\titleformat{\subsubsection}{\xiaosi\heiti}{\thesubsubsection}{0.5em}{}
 \titlespacing{\subsubsection}{0pt}{0pt}{0pt}
 
-\titlecontents{chapter}[3.8em]{\hspace{-3.8em}\hei}{\thecontentslabel~~}{}{\titlerule*[4pt]{.}\contentspage}
+\titlecontents{chapter}[3.8em]
+{\hspace{-3.8em}\heiti}{\thecontentslabel~~}{}{\titlerule*[4pt]{.}\contentspage}
 \dottedcontents{section}[32pt]{}{21pt}{0.3pc}
 \dottedcontents{subsection}[53pt]{}{30pt}{0.3pc}
 
@@ -50,7 +58,6 @@
 \renewcommand*\l@chapter{\@dottedtocline{0}{0em}{5em}}
 \renewcommand*\l@section{\@dottedtocline{1}{1em}{1.8em}}
 \renewcommand*\l@subsection{\@dottedtocline{2}{2em}{2.5em}}
-
 
 % 定义页眉和页脚
 \newcommand{\makeheadrule}{
@@ -70,8 +77,8 @@
 % 在book文件类别下,\leftmark自动存录各章之章名,\rightmark记录节标题
 % 页眉字号 工大要求 小五
 % 根据单双面打印设置不同的页眉；
-\fancyhead[CO]{\song \xiaowu 哈尔滨工业大学\cxueke\cxuewei 学位论文}
-\fancyhead[CE]{\song \xiaowu 哈尔滨工业大学\cxueke\cxuewei 学位论文}%
+\fancyhead[CO]{\xiaowu \songti 哈尔滨工业大学工学硕士学位论文}
+\fancyhead[CE]{\xiaowu \songti 哈尔滨工业大学工学硕士学位论文}
 \fancyfoot[C,C]{\xiaowu -~\thepage~-}
 
 \renewcommand{\frontmatter}{
@@ -140,22 +147,22 @@
 % 封面一
 \vspace*{0.8cm}
 \begin{center}
-\song \xiaoyi \textbf{\cxueke \cxuewei 学位论文}
+{\xiaoyi \songticu 工学硕士学位论文}
 \vspace{1cm}
 
 \parbox[t][2.8cm][t]{\textwidth}{
-\begin{center}{\hei \erhao \ctitle}\end{center}
+\begin{center}{\erhao \heiti \ctitle}\end{center}
 }
 \parbox[t][5.1cm][t]{\textwidth}{
-\begin{center}{\song \erhao \textbf{\etitle}}\end{center}
+\begin{center}{\erhao \textbf{\etitle}}\end{center}
 }
 \parbox[t][7.4cm][t]{\textwidth}{
-\begin{center}{\song \xiaoer \textbf{\cauthor}}\end{center}
+\begin{center}{\xiaoer \songticu \cauthor}\end{center}
 }
 \parbox[t][1.4cm][t]{\textwidth}{
-\begin{center}{\kaishu \xiaoer \textbf{哈尔滨工业大学}}\end{center}
+\begin{center}{\xiaoer \kaishu \textbf{哈尔滨工业大学}}\end{center}
 }
-{\song \xiaoer \cdate}
+{\xiaoer \songticu \textbf{\cdate}}
 \end{center}
 
 % 内封
@@ -163,39 +170,40 @@
 \thispagestyle{empty}
 
 \begin{center}
-{\song \xiaosi
+{\xiaosi \songti
 \begin{tabular}{@{}r@{：}l@{}}
 国内图书分类号 & \classifiedindex \\
 国际图书分类号 & \udc
 \end{tabular}
 }\hfill
-{\song \xiaosi
+{\xiaosi \songti
 \begin{tabular}{@{}r@{：}l@{}}
 学校代码 & 10213 \\
 密级 & \confidentiality
-\end{tabular}}
+\end{tabular}
+}
 
 \parbox[t][3.2cm][t]{\textwidth}{
 \begin{center} \end{center}
 }
-\parbox[t][2.4cm][t]{\textwidth}{\xiaoer
-\begin{center}{\song \textbf{\cdegree 学位论文}}\end{center}
+\parbox[t][2.4cm][t]{\textwidth}{
+\begin{center}{\xiaoer \songticu 工学硕士学位论文}\end{center}
 }
-\parbox[t][5cm][t]{\textwidth}{\erhao
-\begin{center}{\hei \ctitle}\end{center}
+\parbox[t][5cm][t]{\textwidth}{
+\begin{center}{\erhao \heiti \ctitle}\end{center}
 }
-\parbox[t][9.8cm][b]{\textwidth}{\sihao
+\parbox[t][9.8cm][b]{\textwidth}{
 \begin{center}
 \renewcommand{\arraystretch}{1.62}
-\song
+\sihao \songti
 \begin{tabular}{l@{：}l}
-{\hei \cxueweishort \hfill 士\hfill 研\hfill 究\hfill 生} & \cauthor \\
-{\hei 导\hfill 师} & \csupervisor\\
-{\hei 申\hfill 请\hfill 学\hfill 位} & \cdegree \\
-{\hei 学\hfill 科} & \csubject \\
-{\hei 所\hfill 在\hfill 单\hfill 位} & \caffiliate \\
-{\hei 答\hfill 辩\hfill 日\hfill 期} & \cdate \\
-{\hei 授予学位单位} & 哈尔滨工业大学
+{\heiti 硕\hfill 士\hfill 研\hfill 究\hfill 生} & \cauthor \\
+{\heiti 导\hfill 师} & \csupervisor \\
+{\heiti 申\hfill 请\hfill 学\hfill 位} & \cdegree \\
+{\heiti 学\hfill 科} & \csubject \\
+{\heiti 所\hfill 在\hfill 单\hfill 位} & \caffiliate \\
+{\heiti 答\hfill 辩\hfill 日\hfill 期} & \cdate \\
+{\heiti 授予学位单位} & 哈尔滨工业大学
 \end{tabular}
 \renewcommand{\arraystretch}{1}
 \end{center}
@@ -216,10 +224,10 @@ U.D.C: \udc
 \begin{center} \end{center}
 }
 \parbox[t][3.5cm][t]{\textwidth}{\xiaoer
-\begin{center}{Dissertation for the \exueweier \ Degree in \exueke}\end{center}
+\begin{center}{Dissertation for the Master's Degree in Engineering}\end{center}
 }
-\parbox[t][7cm][t]{\textwidth}{\erhao
-\begin{center}{\textbf{\etitle}}\end{center}
+\parbox[t][7cm][t]{\textwidth}{
+\begin{center}{\erhao \textbf{\etitle}}\end{center}
 }
 
 {\renewcommand{\arraystretch}{1.3}
@@ -244,15 +252,15 @@ U.D.C: \udc
 
 \chapter*{摘\quad 要}
 \phantomsection
-\addcontentsline{toc}{chapter}{摘\myquad 要}
+\addcontentsline{toc}{chapter}{摘要}
 
 \setcounter{page}{1}
-\song \defaultfont
+\songti \defaultfont
 \cabstract
 \vspace{\baselineskip}
 
 \hangafter=1\hangindent=51pt\noindent
-{\hei 关键词}：\ckeywords
+{\heiti 关键词}：\ckeywords
 
 % Abstract
 \clearpage
