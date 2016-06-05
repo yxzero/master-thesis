@@ -32,23 +32,20 @@ foot=8.5true mm,
 
 % Tables
 \usepackage{tabularx}
+\usepackage{booktabs}
 
-\usepackage{color}          % 支持彩色
-\usepackage{amsmath}        % AMSLaTeX宏包 用来排出更加漂亮的公式
+% Math
+\usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage[below]{placeins}%允许上一个section的浮动图形出现在下一个section的开始部分,还提供\FloatBarrier命令,使所有未处理的浮动图形立即被处理
-\usepackage{flafter}       % 使得所有浮动体不能被放置在其浮动环境之前，以免浮动体在引述它的文本之前出现.
-\usepackage{multirow}       %使用Multirow宏包，使得表格可以合并多个row格
-\usepackage{booktabs}       % 表格，横的粗线；\specialrule{1pt}{0pt}{0pt}
-\usepackage{longtable}      %支持跨页的表格。
-\usepackage[hang]{subfigure}%支持子图 %centerlast 设置最后一行是否居中
-\usepackage[subfigure]{ccaption} %支持双语标题
-\usepackage[sort&compress,numbers]{natbib}% 支持引用缩写的宏包
-\usepackage{enumitem}       %使用enumitem宏包,改变列表项的格式
-\usepackage{calc}           %长度可以用+ - * / 进行计算
-
-% 定理类环境宏包，其中 amsmath 选项用来兼容 AMS LaTeX 的宏包
 \usepackage[amsmath,thmmarks,hyperref]{ntheorem}
+
+% Other
+\usepackage{calc}
+\usepackage{color}
+\usepackage{enumitem}
+\usepackage[hang]{subfigure}
+\usepackage[subfigure]{ccaption}
+\usepackage[sort&compress,numbers]{natbib}
 
 \usepackage[
 xetex,
@@ -61,8 +58,8 @@ linkcolor=red,
 anchorcolor=green,
 urlcolor=blue,
 breaklinks=true,
-naturalnames  %与algorithm2e宏包协调
+naturalnames,
 ]{hyperref}
 
-% 算法的宏包，注意宏包兼容性，先后顺序为float、hyperref、algorithm(2e)，否则无法生成算法列表
+% 算法的宏包，注意宏包兼容性，先后顺序为float、hyperref、algorithm(2e)
 \usepackage[plainruled,linesnumbered,algochapter]{algorithm2e}

@@ -46,7 +46,7 @@ CEVC（Content Extraction via Valid Characters），
 ~\ref{sec:cevc-other}~节简单介绍对比算法CETR，CETD和CEPR并给出算法实现细节，
 ~\ref{sec:cevc-experiment}~节进行对比实验并分析结果。
 
-\section{CEVC}
+\section{CEVC方法}
 \label{sec:cevc-method}
 
 \subsection{DOM}
@@ -158,7 +158,7 @@ DOM节点的继承关系使得包裹在\texttt{<a>}标签内的所有文本都�
 它们在一篇文章中大量出现，多为冠词、介词或连词，却对文章主体内容贡献很小。
 尽管停止词对文章没有多大意义，但一段话如果没有停止词，那么它就不是一个语义完整的句子，
 更有可能是一组关键词的堆砌，而不是网页的核心内容。
-例~\ref{ex:stopwords}~节选自网页中的一段话，以\texttt{<>}的形式标注了其中的停止词，
+例~\ref{ex:stopwords}~节选自网页中的一段话，以下划线的形式标注了其中的停止词，
 可见停止词在正文中是普遍存在的。
 
 \begin{figure}[htbp]
@@ -166,12 +166,15 @@ DOM节点的继承关系使得包裹在\texttt{<a>}标签内的所有文本都�
 \label{ex:stopwords}
 网页中的停止词示例
 \end{example}
-买房<还是>租房？<这是>眼下很多<人>要面对<的>一道选择题。
-如果简单比较，一边<是>数额很大<的>买房负担，
-一边<是>相对<可>接受<的>租金价格，似乎租房应更受欢迎，现实<却>非如此。
+买房\underline{还是}租房？
+\underline{这是}眼下很多\underline{人}要面对\underline{的}一道选择题。
+如果简单比较，一边\underline{是}数额很大\underline{的}买房负担，
+一边\underline{是}相对\underline{可}接受\underline{的}租金价格，
+似乎租房应更受欢迎，现实\underline{却}非如此。
 山东某县一位购房者对笔者道出心声：“买房子，政府一平方米补贴100元，一套房子能省1万多元。
-租房子，<啥>实惠没有，<还>总<被>赶来赶去，住<着不>踏实。”
-<他>最终<还是>选择<了>勒紧裤腰带贷款买房。
+租房子，\underline{啥}实惠没有，\underline{还}总\underline{被}赶来赶去，
+住\underline{着不}踏实。”
+\underline{他}最终\underline{还是}选择\underline{了}勒紧裤腰带贷款买房。
 \end{figure}
 
 结合上述链接和停止词与网页噪声的相关性，我们提出一个有效字符的概念：
@@ -226,7 +229,7 @@ ValidChars被作为属性，存储在节点中。
 经过算法~\ref{algo:cevc-count}~的处理，
 我们可以得到一个标注了各个节点ValidChars的HTML页面，如图~\ref{fig:news-stepinto}~所示。
 
-\begin{figure}[htbp]
+\begin{figure}[t]
 \centering
 \includegraphics[width=0.9\textwidth]{news-stepinto}
 \caption{有效字符示例}
@@ -360,7 +363,7 @@ Weninger等人于2010年提出CETR（Content Extraction via Tag Ratios）算法
 \citeup{weninger2010cetr}。
 
 CETR的基本概念是定义了Tag Ratio。
-它以行为单位读取HTML网页并处理，分别计算每一行的Tag Ratio，
+它以“行”为单位读取HTML网页并处理，分别计算每一行的Tag Ratio，
 即非HTML标签字符个数与HTML标签个数的比值。
 如果遇到HTML标签个数为零的特殊情况，该行的Tag Ratio就是所有字符的个数。
 作者认为Tag Ratio越高，反映了文本密集程度越高，更有可能是网页的核心内容。
@@ -598,6 +601,8 @@ CEPR-SETPR是基于ETPR并进行加权高斯平滑处理后的算法。
 同样使用了BeautifulSoup来处理HTML文档，转化为DOM树结构。
 CEPR算法需要判断标点符号，这里使用了Python标准库的\texttt{string.punctuation}
 来定义英文标点符号，并补充了一个中文标点符号列表。
+CEPR算法需要计算路径的编辑距离，这里以Tag的尺度计算，
+而不是直接计算两个Tag Path字符串的编辑距离。
 
 我们在小规模数据集上进行了参数调整实验，确定了和\cite{wu2013web}中一致的参数配置：
 $\lambda=0.8$，$\alpha=1$和$r=1$。
@@ -606,7 +611,7 @@ $\lambda=0.8$，$\alpha=1$和$r=1$。
 \label{sec:cevc-experiment}
 
 \subsection{评价指标}
-为了验证算法的抽取效果，我们定义标准评价指标准确率Precision、召回率Recall和
+为了验证算法的抽取效果，我们定义标准评价指标精确率Precision、召回率Recall和
 F\textsubscript{1}。
 通过比较算法抽取的文本$e$和金标准的文本$g$，Precision、Recall和
 F\textsubscript{1}可以如下计算：
@@ -718,11 +723,11 @@ $\alpha$的取值从0到1，如果它太低的话，终止条件就会很苛刻�
 算法会因过于深入DOM树底层而返回一小段正文中的文本。
 这种情况下因为损失了其它核心内容，召回率会下降。
 另一方面，如果为$\alpha$设定一个过高的值，算法过早终止，
-会返回不相关的内容，从而影响最终的准确率。
+会返回不相关的内容，从而影响最终的精确率。
 
 为了试验抽取性能和参数$\alpha$的关系，我们从各个网站中抽取少量网页进行了测试，
 具体结果如图~\ref{fig:cevc-threshold}~所示。
-召回率随着$\alpha$的升高而升高，准确率随着$\alpha$的升高而降低，总体趋势符合之前的期望。
+召回率随着$\alpha$的升高而升高，精确率随着$\alpha$的升高而降低，总体趋势符合之前的期望。
 从图中可以看到，作为一个综合性指标，
 F\textsubscript{1}在$\alpha$从0.3增长到0.6的过程中都很稳定，保持在0.95以上。
 CEVC算法对参数的变化并不敏感，因此在后续的实验中，设置$\alpha$为0.5。
@@ -761,6 +766,12 @@ coordinates{
 首先对CEVC算法的抽取性能进行实验评估，
 表~\ref{tbl:cevc-cevc}~给出了CEVC在新闻和博客数据集上的实验结果，
 包含了Precision、Recall、F\textsubscript{1}和Score四项指标。
+
+我们可以看到CEVC算法在30个不同的新闻、博客网站上都取得了良好的内容抽取效果。
+对新闻网站的总体抽取效果达到了97.4\%的F\textsubscript{1}，
+对博客网站的总体抽取效果达到了94.4\%的F\textsubscript{1}，
+在所有测试集上，F\textsubscript{1}达到了95.8\%。
+表明CEVC算法能够适应新闻、博客类网站的核心内容抽取需求。
 
 \begin{table}[htbp]
 \caption{CEVC在新闻和博客数据集上的实验结果}
@@ -809,17 +820,18 @@ coordinates{
 \end{tabular}
 \end{table}
 
-水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
-水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
-水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
-水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
-水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
-水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
-
 然后在同样的数据集上分别测试CETR、CETD和CEPR，并和CEVC算法做比较，
 如表~\ref{tbl:cevc-all}~所示。
 为了节省篇幅，这里只列出了两个综合性指标F\textsubscript{1}和Score，
 以F\textsubscript{1}/Score的形式给出。
+
+表~\ref{tbl:cevc-all}~中每一行代表一个网站的测试结果，
+粗体标示的是CETR、CETD、CEPR和CEVC四种不同算法
+在F\textsubscript{1}和Score指标上的最优者。
+在大约三分之二的测试网站上，CEVC算法都能取得最优的内容抽取结果，
+CETD和CEPR在剩余三分之一网站上抽取效果最优。
+在总体F\textsubscript{1}指标上，CEVC达到95.8\%，和CETD的95.5\%大致相当，
+随后是CEPR的92.5\%，大幅度超越了CETR的75.2\%。
 
 \begin{table}[htbp]
 \caption{CETR、CETD、CEPR和CEVC的对比结果}
@@ -829,51 +841,55 @@ coordinates{
 \toprule[1.5pt]
 网站 & CETR & CETD & CEPR & CEVC \\
 \midrule[1pt]
-网易新闻 & 68.0\%/51.5\% & 96.9\%/93.9\% & \textbf{97.9\%}/\textbf{95.9\%} & 96.7\%/93.7\% \\
-央视网新闻 & 80.4\%/67.3\% & 95.8\%/91.9\% & \textbf{99.1\%}/\textbf{98.3\%} & 96.7\%/93.7\% \\
-凤凰资讯 & 50.8\%/34.0\% & 99.5\%/99.1\% & 95.6\%/91.6\% & \textbf{99.7\%}/\textbf{99.4\%} \\
-腾讯新闻 & 80.0\%/66.7\% & 96.4\%/93.0\% & \textbf{96.9\%}/\textbf{93.9\%} & 96.6\%/93.4\% \\
-新浪新闻 & 81.2\%/68.4\% & \textbf{98.1\%}/96.2\% & 93.6\%/88.0\% & \textbf{98.1\%}/\textbf{96.3\%} \\
-搜狐新闻 & 73.0\%/57.4\% & \textbf{98.6\%}/\textbf{97.3\%} & 96.0\%/92.3\% & 97.6\%/95.4\% \\
+网易新闻 & 68.3\%/51.9\% & 96.9\%/93.9\% & \textbf{97.9\%}/\textbf{95.9\%} & 96.7\%/93.7\% \\
+央视网新闻 & 85.3\%/74.4\% & 95.8\%/91.9\% & \textbf{99.1\%}/\textbf{98.3\%} & 96.7\%/93.7\% \\
+凤凰资讯 & 53.8\%/36.8\% & 99.5\%/99.1\% & 95.6\%/91.6\% & \textbf{99.7\%}/\textbf{99.4\%} \\
+腾讯新闻 & 80.4\%/67.2\% & 96.4\%/93.0\% & \textbf{96.9\%}/\textbf{93.9\%} & 96.6\%/93.4\% \\
+新浪新闻 & 81.4\%/68.7\% & \textbf{98.1\%}/96.2\% & 93.6\%/88.0\% & \textbf{98.1\%}/\textbf{96.3\%} \\
+搜狐新闻 & 73.7\%/58.3\% & \textbf{98.6\%}/\textbf{97.3\%} & 96.0\%/92.3\% & 97.6\%/95.4\% \\
 中国军网 & 89.6\%/81.2\% & 98.6\%/97.3\% & 97.1\%/94.3\% & \textbf{98.8\%}/\textbf{97.6\%} \\
-参考消息 & 44.9\%/28.9\% & \textbf{99.8\%}/\textbf{99.7\%} & 92.6\%/86.3\% & 95.3\%/91.1\% \\
-中国信息网 & 86.5\%/76.2\% & \textbf{99.0\%}/\textbf{98.1\%} & 98.9\%/97.8\% & \textbf{99.0\%}/98.0\% \\
-央广网 & 85.6\%/74.8\% & 98.5\%/97.1\% & 92.0\%/85.2\% & \textbf{98.6\%}/\textbf{97.2\%} \\
-环球网 & 74.7\%/59.6\% & 92.1\%/85.3\% & \textbf{97.0\%}/\textbf{94.3\%} & 93.7\%/88.1\% \\
-人民网 & 85.9\%/75.3\% & 96.9\%/93.9\% & 89.6\%/81.2\% & \textbf{97.6\%}/\textbf{95.3\%} \\
+参考消息 & 46.5\%/30.3\% & \textbf{99.8\%}/\textbf{99.7\%} & 92.6\%/86.3\% & 95.3\%/91.1\% \\
+中国信息网 & 86.5\%/76.3\% & \textbf{99.0\%}/\textbf{98.1\%} & 98.9\%/97.8\% & \textbf{99.0\%}/98.0\% \\
+央广网 & 85.8\%/75.2\% & 98.5\%/97.1\% & 92.0\%/85.2\% & \textbf{98.6\%}/\textbf{97.2\%} \\
+环球网 & 79.6\%/66.1\% & 92.1\%/85.3\% & \textbf{97.0\%}/\textbf{94.3\%} & 93.7\%/88.1\% \\
+人民网 & 87.8\%/78.3\% & 96.9\%/93.9\% & 89.6\%/81.2\% & \textbf{97.6\%}/\textbf{95.3\%} \\
 南方网 & 87.8\%/78.3\% & \textbf{95.5\%}/\textbf{91.4\%} & 93.3\%/87.5\% & 95.2\%/90.9\% \\
 新华网 & 97.1\%/94.3\% & \textbf{99.2\%}/\textbf{98.5\%} & 99.0\%/98.0\% & \textbf{99.2\%}/\textbf{98.5\%} \\
-联合早报 & 0.0\%/0.0\% & 96.6\%/93.3\% & 91.3\%/84.0\% & \textbf{98.3\%}/\textbf{96.7\%} \\
-新闻 & 74.1\%/58.9\% & \textbf{97.4\%}/94.9\% & 95.6\%/91.6\% & \textbf{97.4\%}/\textbf{95.0\%} \\
+联合早报 & 86.5\%/76.3\% & 96.6\%/93.3\% & 91.3\%/84.0\% & \textbf{98.3\%}/\textbf{96.7\%} \\
+新闻 & 76.6\%/62.1\% & \textbf{97.4\%}/94.9\% & 95.6\%/91.6\% & \textbf{97.4\%}/\textbf{95.0\%} \\
 \hline
-网易博客 & 26.7\%/15.4\% & 53.4\%/36.4\% & 17.4\%/9.5\% & \textbf{86.7\%}/\textbf{76.6\%} \\
-财经网博客 & 85.1\%/74.1\% & 93.7\%/88.2\% & 94.0\%/88.6\% & \textbf{96.1\%}/\textbf{92.5\%} \\
-中金博客 & 57.3\%/40.2\% & 87.0\%/76.9\% & 62.1\%/45.0\% & \textbf{88.0\%}/\textbf{78.5\%} \\
-东方财富博客 & 62.0\%/45.0\% & 87.9\%/78.4\% & 92.1\%/85.3\% & \textbf{95.2\%}/\textbf{90.8\%} \\
-和讯博客 & 50.8\%/34.0\% & 87.6\%/77.9\% & 82.7\%/70.4\% & \textbf{96.8\%}/\textbf{93.9\%} \\
-凤凰博客 & 65.7\%/49.0\% & \textbf{96.4\%}/\textbf{93.1\%} & 89.3\%/80.7\% & 95.3\%/91.1\% \\
-瑞丽博客 & 59.8\%/42.6\% & 88.4\%/79.2\% & 88.8\%/79.9\% & \textbf{91.6\%}/\textbf{84.5\%} \\
-科学网博客 & 64.7\%/47.9\% & 89.4\%/80.8\% & 91.0\%/83.6\% & \textbf{94.9\%}/\textbf{90.3\%} \\
-新浪博客 & 71.3\%/55.3\% & \textbf{90.0\%}/81.8\% & 86.4\%/76.1\% & \textbf{90.0\%}/\textbf{81.9\%} \\
-搜狐博客 & 74.9\%/59.8\% & 93.1\%/87.0\% & 86.0\%/75.4\% & \textbf{93.4\%}/\textbf{87.6\%} \\
-天涯博客 & 82.7\%/70.4\% & \textbf{98.9\%}/\textbf{97.8\%} & 91.3\%/83.9\% & 95.8\%/91.9\% \\
-博客大巴 & 77.2\%/62.9\% & 95.4\%/91.2\% & \textbf{97.1\%}/\textbf{94.4\%} & 95.7\%/91.8\% \\
-博客中国 & 90.2\%/82.2\% & 98.3\%/96.7\% & 93.6\%/88.0\% & \textbf{99.0\%}/\textbf{98.0\%} \\
-博客网 & 80.1\%/66.8\% & 95.6\%/91.5\% & 86.9\%/76.8\% & \textbf{96.6\%}/\textbf{93.5\%} \\
-博客日报 & 82.8\%/70.7\% & \textbf{97.2\%}/\textbf{94.5\%} & 96.5\%/93.2\% & 95.7\%/91.7\% \\
-博客 & 64.3\%/47.4\% & 88.9\%/80.0\% & 83.9\%/72.3\% & \textbf{94.4\%}/\textbf{89.4\%} \\
+网易博客 & 58.3\%/41.2\% & \textbf{97.1\%}/\textbf{94.4\%} & 92.1\%/85.3\% & 86.7\%/76.6\% \\
+财经网博客 & 85.5\%/74.7\% & 93.7\%/88.2\% & 94.0\%/88.6\% & \textbf{96.1\%}/\textbf{92.5\%} \\
+中金博客 & 59.4\%/42.3\% & 87.0\%/76.9\% & 62.1\%/45.0\% & \textbf{88.0\%}/\textbf{78.5\%} \\
+东方财富博客 & 66.5\%/49.8\% & 87.9\%/78.4\% & 92.1\%/85.3\% & \textbf{95.2\%}/\textbf{90.8\%} \\
+和讯博客 & 55.6\%/38.5\% & 88.2\%/78.8\% & 82.7\%/70.4\% & \textbf{96.8\%}/\textbf{93.9\%} \\
+凤凰博客 & 67.6\%/51.0\% & \textbf{96.4\%}/\textbf{93.1\%} & 89.3\%/80.7\% & 95.3\%/91.1\% \\
+瑞丽博客 & 61.4\%/44.3\% & 88.4\%/79.2\% & 88.8\%/79.9\% & \textbf{91.6\%}/\textbf{84.5\%} \\
+科学网博客 & 67.6\%/51.0\% & 89.4\%/80.8\% & 91.0\%/83.6\% & \textbf{94.9\%}/\textbf{90.3\%} \\
+新浪博客 & 82.4\%/70.1\% & \textbf{90.0\%}/81.8\% & 86.4\%/76.1\% & \textbf{90.0\%}/\textbf{81.9\%} \\
+搜狐博客 & 78.5\%/64.7\% & 93.1\%/87.0\% & 86.0\%/75.4\% & \textbf{93.4\%}/\textbf{87.6\%} \\
+天涯博客 & 91.0\%/83.5\% & \textbf{98.9\%}/\textbf{97.8\%} & 91.3\%/83.9\% & 95.8\%/91.9\% \\
+博客大巴 & 87.1\%/77.2\% & 95.4\%/91.2\% & \textbf{97.1\%}/\textbf{94.4\%} & 95.7\%/91.8\% \\
+博客中国 & 90.8\%/83.2\% & 98.3\%/96.7\% & 93.6\%/88.0\% & \textbf{99.0\%}/\textbf{98.0\%} \\
+博客网 & 80.8\%/67.8\% & 95.6\%/91.5\% & 86.9\%/76.8\% & \textbf{96.6\%}/\textbf{93.5\%} \\
+博客日报 & 85.5\%/74.7\% & \textbf{97.2\%}/\textbf{94.5\%} & 96.5\%/93.2\% & 95.7\%/91.7\% \\
+博客 & 73.9\%/58.6\% & 93.8\%/88.2\% & 89.6\%/81.1\% & \textbf{94.4\%}/\textbf{89.4\%} \\
 \hline
-总体 & 68.8\%/52.4\% & 92.8\%/86.6\% & 89.5\%/81.1\% & \textbf{95.8\%}/\textbf{92.0\%} \\
+总体 & 75.2\%/60.2\% & 95.5\%/91.3\% & 92.5\%/86.0\% & \textbf{95.8\%}/\textbf{92.0\%} \\
 \bottomrule[1.5pt]
 \end{tabular}
 \end{table}
 
-水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
-水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
-水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
-水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
-水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
-水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡水电费盛世嫡
+虽然新闻、博客类网站结构相近，能够使用同一种内容抽取算法处理，
+但从表~\ref{tbl:cevc-all}~中的结果可以看出，
+不同算法在博客上的抽取效果都不同程度地低于新闻。
+因此有必要对新闻和博客分类计算各项指标，为了更直观地显示，
+绘制成表~\ref{fig:cevc-prfs}~所示的折线图，四种算法分别以四种不同的折线表示。
+
+在各项指标上，四种算法抽取博客网站的效果都较新闻网站有不同程度的下降。
+CEVC的下降幅度最小，而CEPR和CETR的召回率下降幅度最大，
+从对新闻的99\%左右下降到对博客的88\%左右。
+CEVC对新闻和博客的抽取效果更为稳定，优于对比算法。
 
 \begin{figure}[htbp]
 \centering
@@ -890,11 +906,11 @@ symbolic x coords={News, Blog, Average},
 xtick=data,
 ]
 \addplot[color=blue, mark=square*, dashed]
-coordinates{(News, 60.7) (Blog, 51.0) (Average, 55.4)};
+coordinates{(News, 62.5) (Blog, 63.7) (Average, 63.1)};
 \addplot[color=green, mark=triangle*, dashed]
-coordinates{(News, 95.3) (Blog, 85.6) (Average, 90.1)};
+coordinates{(News, 95.3) (Blog, 93.9) (Average, 94.6)};
 \addplot[color=orange, mark=otimes*, thick]
-coordinates{(News, 92.7) (Blog, 85.7) (Average, 89.2)};
+coordinates{(News, 92.7) (Blog, 91.4) (Average, 92.1)};
 \addplot[color=red, mark=o, thick]
 coordinates{(News, 95.8) (Blog, 93.4) (Average, 94.5)};
 \legend{CETR, CETD, CEPR, CEVC}
@@ -905,11 +921,11 @@ symbolic x coords={News, Blog, Average},
 xtick=data,
 ]
 \addplot[color=blue, mark=square*, dashed]
-coordinates{(News, 95.1) (Blog, 86.9) (Average, 90.8)};
+coordinates{(News, 99.0) (Blog, 87.9) (Average, 93.0)};
 \addplot[color=green, mark=triangle*, dashed]
-coordinates{(News, 99.6) (Blog, 92.4) (Average, 95.8)};
+coordinates{(News, 99.6) (Blog, 93.6) (Average, 96.4)};
 \addplot[color=orange, mark=otimes*, thick]
-coordinates{(News, 98.7) (Blog, 82.2) (Average, 89.9)};
+coordinates{(News, 98.7) (Blog, 87.8) (Average, 92.9)};
 \addplot[color=red, mark=o, thick]
 coordinates{(News, 99.1) (Blog, 95.5) (Average, 97.2)};
 
@@ -920,11 +936,11 @@ symbolic x coords={News, Blog, Average},
 xtick=data,
 ]
 \addplot[color=blue, mark=square*, dashed]
-coordinates{(News, 74.1) (Blog, 64.3) (Average, 68.8)};
+coordinates{(News, 76.6) (Blog, 73.9) (Average, 75.2)};
 \addplot[color=green, mark=triangle*, dashed]
-coordinates{(News, 97.4) (Blog, 88.9) (Average, 92.8)};
+coordinates{(News, 97.4) (Blog, 93.8) (Average, 95.5)};
 \addplot[color=orange, mark=otimes*, thick]
-coordinates{(News, 95.6) (Blog, 83.9) (Average, 89.5)};
+coordinates{(News, 95.6) (Blog, 89.6) (Average, 92.5)};
 \addplot[color=red, mark=o, thick]
 coordinates{(News, 97.4) (Blog, 94.4) (Average, 95.8)};
 
@@ -934,11 +950,11 @@ symbolic x coords={News, Blog, Average},
 xtick=data,
 ]
 \addplot[color=blue, mark=square*, dashed]
-coordinates{(News, 58.9) (Blog, 47.4) (Average, 52.4)};
+coordinates{(News, 62.1) (Blog, 58.6) (Average, 60.2)};
 \addplot[color=green, mark=triangle*, dashed]
-coordinates{(News, 94.9) (Blog, 80.0) (Average, 86.6)};
+coordinates{(News, 94.9) (Blog, 88.2) (Average, 91.3)};
 \addplot[color=orange, mark=otimes*, thick]
-coordinates{(News, 91.6) (Blog, 72.3) (Average, 81.1)};
+coordinates{(News, 91.6) (Blog, 81.1) (Average, 86.0)};
 \addplot[color=red, mark=o, thick]
 coordinates{(News, 95.0) (Blog, 89.4) (Average, 92.0)};
 
@@ -948,6 +964,74 @@ coordinates{(News, 95.0) (Blog, 89.4) (Average, 92.0)};
 \label{fig:cevc-prfs}
 \end{figure}
 
-
-
 \subsection{结果分析}
+
+相对于职业编辑撰写的新闻，博客的内容由用户编辑产生，形式更加自由，
+所使用的HTML标签和样式也更丰富，所以不同方法对博客内容的抽取效果都有所下降。
+新闻正文一般由\texttt{<p>}标签组成的段落构成，格式简洁也很扁平化，
+而博客内容可以由富文本编辑器产生，带有字体、颜色、大小等控制标签，
+结构上层次也比较深，给准确抽取内容带来了挑战。
+
+CETR算法对新闻和博客的整体抽取F\textsubscript{1}只有75.2\%，
+虽然召回率93\%较高，但大幅度牺牲了精确率63.1\%。
+
+CETR算法以“行”为单位处理HTML文档，针对每一行计算Tag Ratio，
+根据Tag Ratio的高低来划分内容或噪声。
+虽然算法经过了平滑处理，也结合序列信息转化为二维数据处理，但从实验结果来看，
+依然将一部分噪声标记为内容，例如推荐文章、免责声明等。
+CETR对每一行都平等对待，没有结合DOM的结构信息，局部的文本密集也被识别为有效内容，
+这就导致最终的结果精确率很低。
+
+CETD算法的整体抽取性能和CEVC基本相当，对新闻的F\textsubscript{1}都是97.4\%，
+总体F\textsubscript{1}分别是95.5\%和95.8\%，几乎没有差别。
+
+这是由于两者的核心评估指标相似，CETD基于DOM节点的文本密度，
+CEVC基于DOM节点的有效字符数量，也都考虑了链接与网页噪声之间的相关性。
+CETD基于DensitySum的方式，选取子节点文本密度之和最大的节点标记为内容，
+而CEVC则从\texttt{<body>}开始，逐层选择有效字符最多的子节点不断深入，
+二者的输出都是一个特定DOM节点下的文本内容，所以整体抽取效果很接近。
+
+实验早期CETD算法对博客网站的F\textsubscript{1}不足90\%，
+分析具体网页后发现，部分博客网站包含\texttt{<textarea>}这样的标签，
+标签内部包含大量代码，导致CETD对文本密度的计算向\texttt{<textarea>}倾斜，
+最终错误地选择\texttt{<textarea>}作为正文内容。
+为了更好地比较CETD算法的性能，在预处理阶段，
+除了\texttt{<script>}和\texttt{<style>}之外，还去除了\texttt{<textarea>}标签。
+最终的实验结果如表~\ref{tbl:cevc-all}~所示，
+对博客网站的F\textsubscript{1}提升到93.8\%。
+这表明虽然CETD和CEVC的抽取性能相当，但其预处理阶段需要处理更多的特殊标签，
+而CEVC算法加入了对停止词的识别，从而能够有效区分文本内容，不受这些标签的干扰。
+
+CEPR算法的整体F\textsubscript{1}为92.5\%，精确率和召回率都在92\%左右，
+对精确率和召回率都没有偏倚。
+
+CEPR的计算过程和CETR有相似之处，CETR以“行”为单位，
+而CEPR以路径模式为单位，对每个文本叶节点计算出一个指标。
+二者也都进行了高斯平滑，只不过CEPR的平滑过程加入了路径编辑距离的权重。
+CEPR的抽取效果较CETR提升很多，但分散的文本叶节点之间，只靠路径模式的相似性关联，
+容易被遗漏或误报，不如CETD和CEVC基于DOM内容节点整体来做决策。
+
+CEVC算法对正文内容较短的网页，抽取效果较差。
+如表~\ref{tbl:cevc-all}~所示，参考消息和环球网包含部分短讯，
+新闻主体内容很短，导致算法错误地将推荐文章、新闻评价板块标记为核心内容，
+从而降低了F\textsubscript{1}。
+这也是CEVC基于文本聚集程度来划分核心内容的一个缺陷。
+
+以图~\ref{fig:blog-compare}~的一篇
+科学网博客\footnote{http://blog.sciencenet.cn/}为例，
+直观地比较不同算法的抽取区域。
+图中标记了A、B、C、D四个区域，A、B、C为博客正文，而D为博客的相关推荐文章。
+\begin{itemize}
+\item CETR算法抽取结果为A、B、C、D，虽然没有遗漏正文，却包含了噪声部分D。
+\item CETD算法抽取结果为B，这是因为B区域是一个\texttt{<backquote>}标签，
+包含了许多\texttt{<p>}标签，其子节点的文本密度之和最大，从而遗漏了A和C。
+\item CEPR算法根据路径模式划分内容，丢弃了Tag Path Ratio较低的A部分，选择了B和C。
+\item CEVC算法根据有效字符在DOM树中的分布，正确地选择了A、B、C作为核心内容。
+\end{itemize}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth,height=0.45\textheight]{blog-compare}
+\caption{不同算法的抽取区域比较}
+\label{fig:blog-compare}
+\end{figure}
