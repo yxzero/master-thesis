@@ -3,6 +3,7 @@
 \chapter{基于有效字符的Web内容抽取}
 
 \section{概述}
+\label{sec:cevc-intro}
 在Internet时代，Web新闻和博客都是很有代表性的信息发布和获取渠道。
 
 Web新闻区别于传统的报纸，在互联网上发布意味着它能够触及更广大的受众，扩大自己的影响力，
@@ -306,8 +307,9 @@ MCR计算过程
 这时候采取一种简单的策略，认为当前节点的父节点就是核心内容块。
 后续实验表明，这是一个简单也可以接受的方案。
 
-算法~\ref{algo:cevc-stepinto}~能够很快运行结束，因为它至多被递归调用$h$次，
-$h$是DOM树的深度，时间复杂度为$O(h)$。
+通过在DOM树中不断选择最有代表性的子节点不断深入，
+算法~\ref{algo:cevc-stepinto}~至多被递归调用$h$次，
+$h$是DOM树的高度，所以其时间复杂度为$O(h)$，能够很快运行结束。
 
 \begin{algorithm}[htbp]
 \caption{stepInto(N)}
@@ -355,7 +357,7 @@ jieba\footnote{https://github.com/fxsjy/jieba}中的停止词模块。
 jieba（结巴中文分词）是一个开源的Python中文分词组件，MIT协议授权，
 支持多种分词模式。
 
-\section{对比算法}
+\section{对比算法及实现}
 \label{sec:cevc-other}
 
 \subsection{CETR}
