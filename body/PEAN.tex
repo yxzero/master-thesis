@@ -58,13 +58,74 @@ every node/.style={rectangle,rounded corners,draw},
 虽然用户能够很容易区分不同的帖子，但面对结构样式各异的论坛网站，
 如何从论坛网页中自动化地抽取帖子，转化为结构化的数据，
 是一个很有挑战性的工作，也是舆情爬虫系统的重要环节。
-本章利用论坛帖子中普遍存在的发帖时间信息作为锚节点，
-提出一种基于锚节点的帖子抽取方法，~\ref{sec:pean-method}~节详述该方法
-PEAN（Post Extraction via Anchor Nodes），
-~\ref{sec:cevc-other}~节简单介绍对比算法MiBAT并给出算法实现细节，
-~\ref{sec:pean-experiment}~节进行对比实验并分析结果。
 
-\section{PEAN方法}
+本章利用论坛帖子中普遍存在的发帖时间信息作为锚节点，
+提出一种基于锚节点的帖子抽取方法，
+~\ref{sec:cevc-other}~节简单介绍对比算法MiBAT（基于锚点树的数据记录抽取算法）
+的原理和实现细节，
+~\ref{sec:pean-method}~节详述本文提出的基于锚节点的论坛帖子抽取算法PEAN
+（Post Extraction via Anchor Nodes），
+~\ref{sec:pean-experiment}~节进行论坛帖子抽取实验，并分析实验结果。
+
+\section{对比算法及实现}
+\label{sec:pean-other}
+
+本章的对比算法为MiBAT\citeup{song2010automatic}
+（\textbf{Mi}ning data records 
+\textbf{B}ased on \textbf{A}nchor \textbf{T}rees），
+基于锚点树的数据记录抽取算法。
+
+面对论坛帖子中UGC内容格式自由、复杂多变而干扰相似度计算的问题
+（图~\ref{fig:post-match}~），MiBAT的主要解决方法是，
+在树相似度计算过程中，尽可能选择隶属于格式化模板的一部分节点进行比较，
+而不是将所有节点全部考虑进去。
+这里相互比较的节点子集，称为tree fragments。
+树相似度定义扩展为：
+
+\begin{definition}
+\label{def:tree-ex-sim}
+已知$M$是两个树$T_1$和$T_2$的匹配，$f$是tree fragment选择函数，
+则$T_1$和$T_2$在$f$作用下的相似度是：
+\begin{equation}
+TreeSim_f(T_1, T_2) = \frac{M \cap (f(V_1) \times f(V_2))}
+{(\vert f(V_1) \vert + \vert f(V_2) \vert) / 2}
+\end{equation}
+\end{definition}
+
+定义~\ref{def:tree-ex-sim}~中，
+$f(V_1) \times f(V_2) = {(u,v) \vert u \in f(V_1), v \in f(V_2)}$。
+最佳情况是，tree fragment选择函数直接选取了树的模板部分，但这难以做到。
+\cite{song2010automatic}定义了几种tree fragment选择函数，
+并最终使用了Pivot and Siblings（PS）选择函数。
+
+\begin{definition}
+\label{def:mibat-ps}
+\textbf{Pivot and Siblings (PS)}
+$f_{PS}(V) = \left\{ v \vert v \in V, parent{v} = parent{p} \right\}$
+其中$p$是$T$的一个锚节点，$parent(v)$是$v$的父节点。
+\end{definition}
+
+如定义~\ref{def:mibat-ps}~所示，
+简单来说，就是用锚节点和锚节点的兄弟节点作为模板部分的近似，
+从而规避UGC节点对相似度计算的干扰。
+
+为了从DOM中定位候选Anchor Trees，在兄弟节点之间横向进行相似度比较，具体过程是：
+通过正则表达式匹配获得候选锚节点后，可以用它们来鉴别新的Anchor Trees，
+一旦新的Anchor Tree加入到集合中，就可以更新候选锚节点集合。
+这个过程一直持续到没有新的Anchor Tree加入即终止。
+
+\textbf{实现细节}
+
+本文中MiBAT算法使用Python 2.7实现。
+
+为了处理HTML文档中的错误，同样使用了BeautifulSoup尽可能纠正。
+并通过BeautifulSoup，将HTML文档转化为内存中的DOM树，
+在进行计算和操作之前去除了所有\texttt{<script>}，\texttt{<style>}和\texttt{comment}。
+
+MiBAT需要从HTML文档中抽取发帖时间，
+所使用的正则表达式在~\ref{subsec:anchor}~节已经描述过。
+
+\section{基于锚节点的帖子抽取算法}
 \label{sec:pean-method}
 
 \subsection{树匹配算法}
@@ -191,7 +252,7 @@ Initialize a $m \times n$ matrix $M$ with all zeros \;
 \Return $M[m,n] + 1$ \;
 \end{algorithm}
 
-\subsection{锚节点}
+\subsection{锚节点定义与统计方法}
 \label{subsec:anchor}
 
 使用锚节点来辅助信息抽取，在\cite{song2010automatic}中就已经提出。
@@ -251,7 +312,7 @@ Pivots被作为属性，存储在相应节点中。
 \label{fig:forum-stepinto}
 \end{figure}
 
-\subsection{定位帖子节点}
+\subsection{帖子父节点定位方法}
 经过大量实例分析，我们发现论坛帖子有一个共同的特点，它们都位于DOM树中同一个父节点之下。
 图~\ref{fig:forum-stepinto}~的帖子形式如\texttt{<div\#post\_30073401>}，
 都位于父节点\texttt{<div\#postlist>}之下。
@@ -266,11 +327,11 @@ Pivots被作为属性，存储在相应节点中。
 如图~\ref{fig:forum-stepinto}~中红线标示的节点。
 为了描述方便，将这条路径在例~\ref{ex:rmd-mpr}~中列出，其中RMD和MPR在下文中详述。
 
-\begin{figure}[htbp]
 \begin{example}
 \label{ex:rmd-mpr}
 RMD和MPR计算过程
 \end{example}
+\begin{oframed}
 \begin{verbatim}
 1. <body> Pivots=22 RMD=0 MPR=1
 2. <div#wp> Pivots=22 RMD=0 MPR=1
@@ -279,7 +340,7 @@ RMD和MPR计算过程
 5. <div#post_30073602> Pivots=3 RMD=0 MPR=1
 6. ...
 \end{verbatim}
-\end{figure}
+\end{oframed}
 
 每次沿着Pivots最大的子节点不断深入，这个过程不能一直持续下去，
 否则会陷入叶节点中，而错失最终的目标节点。
@@ -355,7 +416,7 @@ maxNode = null \;
 算法~\ref{algo:pean-stepinto}~能够很快运行结束，因为它至多被递归调用$h$次，
 $h$是DOM树的深度，时间复杂度为$O(h)$。
 
-\subsection{筛选候选帖子}
+\subsection{候选帖子筛选方法}
 在定位了帖子的父节点后，筛选真正的帖子并不是一件简单的工作，
 因为帖子的兄弟节点中可能包含很多噪声部分，例如广告、装饰性内容等。
 以一篇西陆论坛\footnote{http://club.xilu.com/}的帖子为例，
@@ -507,81 +568,32 @@ BeautifulSoup是一个可以从HTML或XML文件中提取数据的Python库，
 PEAN需要从HTML文档中抽取发帖时间，
 所使用的正则表达式在~\ref{subsec:anchor}~节已经描述过。
 
-\section{对比算法及实现}
-\label{sec:pean-other}
 
-本章的对比算法为MiBAT\citeup{song2010automatic}
-（\textbf{Mi}ning data records 
-\textbf{B}ased on \textbf{A}nchor \textbf{T}rees），
-该算法也通过Python 2.7实现。
-
-面对论坛帖子中UGC内容格式自由、复杂多变而干扰相似度计算的问题
-（图~\ref{fig:post-match}~），MiBAT的主要解决方法是，
-在树相似度计算过程中，尽可能选择隶属于格式化模板的一部分节点进行比较，
-而不是将所有节点全部考虑进去。
-这里相互比较的节点子集，称为tree fragments。
-树相似度定义扩展为：
-
-\begin{definition}
-\label{def:tree-ex-sim}
-已知$M$是两个树$T_1$和$T_2$的匹配，$f$是tree fragment选择函数，
-则$T_1$和$T_2$在$f$作用下的相似度是：
-\begin{equation}
-TreeSim_f(T_1, T_2) = \frac{M \cap (f(V_1) \times f(V_2))}
-{(\vert f(V_1) \vert + \vert f(V_2) \vert) / 2}
-\end{equation}
-\end{definition}
-
-定义~\ref{def:tree-ex-sim}~中，
-$f(V_1) \times f(V_2) = {(u,v) \vert u \in f(V_1), v \in f(V_2)}$。
-最佳情况是，tree fragment选择函数直接选取了树的模板部分，但这难以做到。
-\cite{song2010automatic}定义了几种tree fragment选择函数，
-并最终使用了Pivot and Siblings（PS）选择函数。
-
-\begin{definition}
-\label{def:mibat-ps}
-\textbf{Pivot and Siblings (PS)}
-$f_{PS}(V) = \left\{ v \vert v \in V, parent{v} = parent{p} \right\}$
-其中$p$是$T$的一个锚节点，$parent(v)$是$v$的父节点。
-\end{definition}
-
-如定义~\ref{def:mibat-ps}~所示，
-简单来说，就是用锚节点和锚节点的兄弟节点作为模板部分的近似，
-从而规避UGC节点对相似度计算的干扰。
-
-为了从DOM中定位候选Anchor Trees，在兄弟节点之间横向进行相似度比较，具体过程是：
-通过正则表达式匹配获得候选锚节点后，可以用它们来鉴别新的Anchor Trees，
-一旦新的Anchor Tree加入到集合中，就可以更新候选锚节点集合。
-这个过程一直持续到没有新的Anchor Tree加入即终止。
-
-\textbf{实现细节}
-
-本文中MiBAT算法使用Python 2.7实现。
-
-为了处理HTML文档中的错误，同样使用了BeautifulSoup尽可能纠正。
-并通过BeautifulSoup，将HTML文档转化为内存中的DOM树，
-在进行计算和操作之前去除了所有\texttt{<script>}，\texttt{<style>}和\texttt{comment}。
-
-MiBAT需要从HTML文档中抽取发帖时间，
-所使用的正则表达式在~\ref{subsec:anchor}~节已经描述过。
-
-\section{实验与分析}
+\section{论坛帖子抽取实验}
 \label{sec:pean-experiment}
 
-\subsection{评价指标}
+\subsection{帖子抽取评价指标}
 为了验证算法的抽取效果，我们定义标准评价指标准确率Precision、召回率Recall和
 F\textsubscript{1}。
 通过比较算法抽取的帖子集合$e$和金标准的帖子集合$g$，Precision、Recall和
 F\textsubscript{1}可以如下计算：
 
 \begin{equation}
-P = \frac{e \cap g}{\vert e \vert}, R = \frac{e \cap g}{\vert g \vert}
+P = \frac{\vert e \cap g \vert}{\vert e \vert}, 
+R = \frac{\vert e \cap g \vert}{\vert g \vert}
 \end{equation}
 \begin{equation}
 F_1 = \frac{2 \times P \times R}{P + R}
 \end{equation}
 
-\subsection{数据集}
+在计算一个网站或一个算法整体的评价指标时，是将每个单独网页的正确抽取帖子数累加计算的，
+而不是简单计算平均值，Precision如下所示，Recall和F\textsubscript{1}的计算类似。
+
+\begin{equation}
+P = \frac{\sum \vert e_i \cap g_i \vert}{\sum \vert e_i \vert}
+\end{equation}
+
+\subsection{论坛数据集}
 为了验证帖子抽取算法在实际中文论坛上的抽取效果，
 我们从知名的网址导航网站hao123\footnote{https://www.hao123.com/}
 和360导航\footnote{https://hao.360.cn/}
@@ -589,7 +601,7 @@ F_1 = \frac{2 \times P \times R}{P + R}
 从采集的网页中，去除失效的、没有回帖的网页，
 总计有效网页973个，平均每个网站50个以内。
 
-\begin{table}[htbp]
+\begin{table}[t]
 \caption{论坛数据集}
 \label{tbl:forum-dataset}
 \vspace{0.5em}\centering\wuhao
@@ -626,11 +638,18 @@ F_1 = \frac{2 \times P \times R}{P + R}
 如例~\ref{ex:forum-wrapper}~所示，
 FORUM是Python的字典结构，以key-value对的形式存储各个论坛的详细配置。
 
-\begin{figure}[htbp]
+以网易论坛为例，采集程序从板块地址\url{http://bbs.news.163.com/}入手，
+得到某个板块的网页，然后通过thread的CSS选择符定位每个thread的url。
+选择符\texttt{ul.rankList a[href]}的含义是，
+选择所有\texttt{<ul class='rankList'>}标签下的，
+有\texttt{href}属性的\texttt{<a>}标签。
+同理，通过帖子的CSS选择符可以标注真正的帖子，供后续实验分析。
+
 \begin{example}
 \label{ex:forum-wrapper}
 论坛包装器示例
 \end{example}
+\begin{oframed}
 \begin{verbatim}
 FORUM = {
   '163': {
@@ -639,23 +658,35 @@ FORUM = {
     'board': 'http://bbs.news.163.com/',  # 论坛板块地址
     'thread': ['ul.rankList a[href]'],    # 论坛thread的CSS选择符 
     'post': ['div.tie-item'],             # 论坛帖子的CSS选择符
-  },
-}
+  }}
 \end{verbatim}
-\end{figure}
-
-以网易论坛为例，采集程序从板块地址\url{http://bbs.news.163.com/}入手，
-得到某个板块的网页，然后通过thread的CSS选择符定位每个thread的url。
-选择符\texttt{ul.rankList a[href]}的含义是，
-选择所有\texttt{<ul class='rankList'>}标签下的，
-有\texttt{href}属性的\texttt{<a>}标签。
-同理，通过帖子的CSS选择符可以标注真正的帖子，供后续实验分析。
+\end{oframed}
 
 这里的CSS选择符可以是一个列表，包含不止一个选择符，以应对更负责的情况。
 例如在凯迪社区的配置中，帖子既可能是\texttt{div.reply-box}，
 也可能是\texttt{div.posted-box-add}，对应主帖和后续跟帖。
 
-\subsection{实验结果}
+\subsection{实验过程和结果分析}
+
+实验环境为一台MacBook Pro（2 GHz Intel Core i7处理器，8G内存，256G SSD），
+详细的实验过程如下：
+\begin{enumerate}
+\item 将下载的论坛原始HTML网页统一保存在本地文件夹，
+以“网站名-URL的MD5.html”的形式命名。
+\item 分别用Python实现MiBAT算法和PEAN算法，并提供统一的调用接口。
+输入HTML源文件，算法在内存中构建DOM树，对每个抽取到的帖子，
+都在相应的DOM树标签上追加一个自定义属性，例如\texttt{marked-by-MiBAT}。
+全部处理完毕后，算法将DOM树重新序列化为HTML源文件返回。
+\item 编写测试脚本，首先对待测试的论坛网页进行预处理。
+通过例~\ref{ex:forum-wrapper}~中人工编写的包装器，
+对每一个金标准指定的帖子，在相应的DOM树标签上追加一个自定义属性，
+\texttt{this-is-real-post}。
+\item 然后测试脚本先后调用MiBAT和PEAN算法，得到处理后的DOM树，
+统计既有\texttt{marked-by-MiBAT}属性，
+又有\texttt{this-is-real-post}属性的DOM树标签个数，来计算MiBAT算法的性能指标。
+通过这种在DOM树中追加自定义属性的方式，能够方便地统计不同算法的抽取效果。
+\item 实验结果以日志的形式保存在文件中，便于后续整理。
+\end{enumerate}
 
 在20个论坛构成的数据集上对MiBAT和PEAN算法分别进行评估，
 实验结果如表~\ref{tbl:pean-all}~所示，
@@ -669,7 +700,7 @@ MiBAT的总体精确率较高，达到了99.6\%，高于PEAN的98.3\%，
 实验结果表明，PEAN相比于MiBAT在召回率指标上有大幅度提升，
 总体F\textsubscript{1}指标也优于MiBAT。
 
-\begin{table}[htbp]
+\begin{table}[t]
 \caption{MiBAT和PEAN在论坛数据集上的对比结果}
 \label{tbl:pean-all}
 \vspace{0.5em}\centering\wuhao
@@ -703,8 +734,6 @@ PEAN-P & PEAN-R & PEAN-F\textsubscript{1} \\
 \end{tabular}
 \end{table}
 
-\subsection{结果分析}
-
 MiBAT在树相似度计算过程中，尽可能选择隶属于格式化模板的一部分节点进行比较，
 而不是将所有节点全部考虑进去。
 最佳情况是，tree fragment选择函数直接选取了树的模板部分，但这难以做到。
@@ -732,6 +761,13 @@ MiBAT在树相似度计算过程中，尽可能选择隶属于格式化模板的
 \label{fig:forum-compare}
 \end{figure}
 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth,height=0.45\textheight]{forum-compare2}
+\caption{天涯论坛}
+\label{fig:forum-compare2}
+\end{figure}
+
 还有一种情况，在论坛页面的楼主发帖（第一个帖子）中，
 形式结构和后续跟帖在锚节点层面上有较大不同。
 如图~\ref{fig:forum-compare2}~的一篇
@@ -741,10 +777,3 @@ MiBAT在树相似度计算过程中，尽可能选择隶属于格式化模板的
 PEAN算法直接计算两个候选帖子中最大匹配节点个数，
 来衡量“重合”部分的大小，避免了片面选择Tree Fragment带来的不稳定性，
 在实验中取得了更好的效果。
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth,height=0.45\textheight]{forum-compare2}
-\caption{天涯论坛}
-\label{fig:forum-compare2}
-\end{figure}

@@ -1,76 +1,92 @@
 %!TEX root = ../main.tex
 
-\chapter{应用实例——Web新闻聚合系统}
+\chapter{Web新闻采集系统的设计与实现}
 
-\section{概述}
+\section{系统的设计目标}
 \label{sec:system-intro}
-为了验证本文提出的模板无关的内容抽取技术在爬虫系统中的实际效果，
-设计并实现了一个Web新闻聚合系统。
-实时采集多种渠道来源的Web新闻，通过模板无关的内容抽取技术抽取新闻正文，
-并结合一些领域规则抽取标题、日期等元信息，封装成结构化信息转储在后端的数据仓库中，
-提供面向中文的全文检索支持，也为后续的数据分析处理提供了接口。
 
-在这样一个网络信息爆炸的时代，网络舆论对社会的影响越来越重要，
-Web新闻聚合系统对关注网络舆情，研究热点事件的产生、传播规律，
-构建语料库都具有实际意义。
+随着互联网资源的爆发式增长，Web新闻的便捷性、广泛覆盖性和自由性给传统媒体带来巨大冲击，
+无论是从门户网站上浏览分类新闻，还是从智能手机上接收热点新闻推送，
+Web新闻已经成为人们获取信息的重要渠道。
 
-本章~\ref{sec:system:architecture}~节介绍Web新闻聚合系统的总体架构，
-~\ref{sec:system:module}~节详细阐述系统各个模块的设计和关键技术，
-~\ref{sec:system:runtime}~节对系统的运行效果进行评估。
+面对每天都飞速增长的Web新闻，如何从中挖掘舆情信息、研究热点事件的产生传播规律，
+都有赖于一个渠道来源丰富的Web新闻采集系统的支持。
 
-\section{系统架构和工作流程}
-\label{sec:system:architecture}
+新闻采集系统的主要目标是，通过多种渠道采集Web新闻，并对原始新闻进行正文及元信息抽取，
+转化为结构化信息存储于数据仓库中，并提供全文检索支持，
+也为后续的自然语言处理和机器学习提供数据接口。
+系统使用了本文提出的基于有效字符的Web内容抽取算法，来进行新闻正文的抽取，
+通过系统的运行效果，验证了模板无关的内容抽取算法对爬虫系统的实际意义。
+
+面对海量异构、持续变化的新闻网站，大数据的存储压力，
+在设计Web新闻采集系统时，需要考虑以下几个关键问题：
+
+（1）准确性
+
+为了节省存储系统的开销、降低索引规模、也能够为用户提供“干净”的新闻内容，
+新闻采集系统并不存储原始HTML网页，而是进行正文及元信息抽取后，存储结构化信息。
+这就要求系统的信息抽取算法准确性足够高，保留新闻的核心内容，
+而过滤冗余内容和噪声，保证内容的质量。
+
+（2）实时性
+
+新闻内容的重要价值在于实时性，随着时间的流逝其价值会不断降低。
+这就要求爬虫系统能够在尽可能短的时间内，将最新发布的Web新闻采集汇总，
+提供给用户，保证整个系统的实时性。
+
+（3）可扩展性
+
+面对海量异构、持续变化的新闻网站，可扩展性首先体现在人工成本上。
+传统的基于包装器或模板的信息抽取方法难以适应互联网规模的采集要求，
+系统应当在扩展采集源时投入尽可能少的人力成本，并且考虑到后续的维护成本，
+因此本系统使用了模板无关的信息抽取算法。
+其次，面对大数据的存储压力，可扩展性要求系统的存储和检索系统能够随时水平扩展，
+通过多机分布的方式抗住压力。
+
+（4）稳定性
+
+稳定性是系统的基本要求，新闻采集系统在后台24小时不间断地从多种渠道采集Web新闻，
+并对用户提供检索和其它服务。
+在互联网的复杂环境下，系统运行过程中会遇到各种未知情况，
+这要求系统能够捕捉异常并正确处理，做好日志记录和监控，保证整个服务的稳定可用性。
+
+\section{总体设计方案}
+\label{sec:system-architecture}
 
 \subsection{系统架构}
-面对海量异构、持续变化的新闻网站，大数据的存储压力，
-在设计Web新闻聚合系统时，需要考虑以下几个关键问题：
-\begin{itemize}
-\item 关键模块的可扩展能力
-\item 存储与检索性能
-\item 系统的稳定可用性
-\end{itemize}
-
-Web新闻聚合系统的总体架构如图~\ref{fig:architecture}~所示，
+Web新闻采集系统的总体架构如图~\ref{fig:architecture}~所示，
 标示了系统的关键组件和数据流动情况。
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{architecture}
-\caption{Web新闻聚合系统整体架构}
+\includegraphics{architecture}
+\caption{Web新闻采集系统整体架构}
 \label{fig:architecture}
 \end{figure}
 
-\subsection{总体工作流程}
-Web新闻聚合系统的核心工作流程分为以下几个部分：
-
-（1）任务分解和下发
-
-MySQL数据库中存储了各个新闻网站的配置，例如RSS源、新闻网页的URL模式等。
-Controller作为调度模块，定时从数据库中加载配置，解析并分解为相应任务，
-发送到消息队列中，每一条消息都完整包含了完成一个特定任务需要的信息，等待Worker消费并执行。
-同时MySQL中还维护了相应的任务表，记录每个任务的基本信息和当前状态。
-用户对整个系统的操作都集中在配置中，包括添加新的新闻网站，设定不同的抓取优先级和频率等，
-给用户提供了简单统一的接口。
-
-（2）网页下载和信息抽取
-
-网页下载和信息抽取由一组幂等的Worker构成，每个Worker是一个独立的进程，
-可以部署在一台机器上，也可以部署在多台机器上进行水平扩展。
-Worker监听消息队列，接收任务并执行，根据需要更新数据库或者转发消息给下一个模块。
-
-在新闻采集系统中，任务主要分为两类，新闻列表解析和新闻信息抽取。
-新闻列表解析就是从RSS源或包含新闻列表的网页中，抽取每一篇新闻的URL，供后续信息抽取。
-然后新闻信息抽取模块根据指定的URL，抽取新闻正文和标题等元信息，然后转储在数据仓库中。
-为了防止重复抓取同一个页面而造成资源浪费，还需要一个全局的URL过滤组件，
-判断当前URL是否已经重复，这里使用Redis实现。
-
-（3）存储与检索
-
-MySQL作为传统的关系型数据库，不擅长全文检索，
-因此选用了Elasticsearch作为存储和检索引擎，将需要检索支持的结构化信息导入Elasticsearch，
-而把传统的配置管理、任务管理等交给MySQL处理，充分发挥各自的优势。
+系统的存储层包括传统关系型数据库MySQL，
+Elasticsearch存储与检索引擎，充分发挥了各自的优势。
+MySQL负责传统的关系型存储任务，例如配置管理和任务管理，
+而ELasticsearch负责结构化信息的存储，能够方便地提供全文检索功能。
 Elasticsearch具有很强的扩展能力，多机部署构成集群，面向用户提供透明的HTTP接口，
 能够满足存储和检索的分布式扩展需求。
+
+系统的采集层主要包括由Python编写的爬虫模块，分为控制进程和工作进程两类：
+控制进程以定时任务或其它方式触发，从MySQL中加载爬虫配置，
+将任务分解并下发到消息队列中；
+工作进程包括列表解析模块和信息抽取模块，从消息队列中接受任务并执行。
+这是一个典型的“生产者-消费者”模型，通过消息队列联系在一起，相互解耦并能灵活地实现并行化。
+为了防止重复抓取同一个页面而造成资源浪费，还需要一个全局的URL过滤组件，
+判断当前URL是否已经重复，这里使用Key-Value数据库Redis实现。
+
+系统的展示层是一套Web界面，主要包括用户登录界面、采集系统配置界面、
+系统运行状态监控界面和新闻检索界面。
+在采集系统配置界面，用户可以在多个新闻采集来源中进行选择，并完成具体的配置，
+例如RSS地址、新闻URL模式和采集频率等；
+通过运行状态监控界面，用户能够直观地了解整个系统的运行情况，
+包括采集的新闻总量、各个渠道来源和新闻网站的分布情况、内存硬盘的消耗情况等；
+在新闻检索界面中，用户可以提交查询请求，系统借助Elasticsearch的搜索服务，
+返回与之相关联的新闻内容。
 
 \subsection{新闻采集流程}
 Web新闻从多种信息来源采集，对每一个新闻来源，系统都有与之对应的新闻列表解析模块，
@@ -78,31 +94,32 @@ Web新闻从多种信息来源采集，对每一个新闻来源，系统都有�
 这种架构的优势在于，通过消息队列的中转，新闻列表解析和新闻信息抽取相互解耦，
 屏蔽底层细节，为信息抽取提供统一的接口，也利于计算资源的水平扩展。
 
-图~\ref{fig:architecture}~表现了Controller和Worker的一般关系，
-为了详细阐述新闻采集过程，将Worker细分为负责新闻列表解析的Parser，
-以及负责新闻信息抽取的Extractor，形成图~\ref{fig:crawler}~。
+图~\ref{fig:architecture}~表现了控制进程和工作进程的一般关系，
+为了详细阐述新闻采集过程，将工作进程细分为新闻列表解析模块，
+以及新闻信息抽取模块，形成图~\ref{fig:crawler}~。
 其中1--6标示的是各个流程：
 \begin{enumerate}
-\item Controller以定时任务或其它方式触发，从MySQL数据库加载配置；
-\item Controller分解任务，封装为消息投放到消息队列中，
+\item 控制进程以定时任务或其它方式触发，从MySQL数据库加载配置，
+对每一个新闻来源渠道，数据库都有相应的配置表项；
+\item 控制进程分解任务，封装为消息投放到消息队列中，
 消息还可以设定相应的优先级和延迟执行时间，从而灵活配置计算资源；
-\item Parser接收任务后从指定的新闻源解析得到一系列新闻URL；
-\item Parser将新闻URL封装成消息投放到消息队列中；
-\item Extractor接收任务后从URL指定的新闻页面中，抽取正文内容及其它元信息；
-\item Extractor将新闻正文内容及其它元信息转储到Elasticsearch中；
+\item 新闻列表解析模块接受任务后从指定的新闻源解析得到一系列新闻URL；
+\item 新闻列表解析模块将新闻URL封装成消息投放到消息队列中；
+\item 新闻信息抽取模块接受任务后从URL指定的新闻页面中，抽取正文内容及其它元信息；
+\item 新闻信息抽取模块将新闻正文内容及其它元信息转储到Elasticsearch搜索引擎中。
 \end{enumerate}
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.9\textwidth]{crawler}
+\includegraphics{crawler}
 \caption{新闻采集流程}
 \label{fig:crawler}
 \end{figure}
 
-\section{系统模块和关键技术}
-\label{sec:system:module}
+\section{各模块的设计与实现}
+\label{sec:system-module}
 
-\subsection{新闻列表解析}
+\subsection{列表解析模块}
 Web新闻采集的来源包括RSS、元搜索和一般新闻网站三类。
 RSS是被广泛接受的标准信息聚合接口，这是系统优先考虑的采集来源，
 但部分新闻网站可能不提供RSS接口，所以需要针对一般新闻网站的列表解析模块。
@@ -124,11 +141,11 @@ RSS是互联网上被广泛采用的内容包装和投递协议，搭建了一�
 RSS是XML格式的普通文本，简单的格式使得它既能被程序自动化解析也能被普通人理解，
 一个RSS如例~\ref{ex:rss}~所示\footnote{https://en.wikipedia.org/wiki/RSS}。
 
-\begin{figure}[t]
 \begin{example}
 \label{ex:rss}
 RSS示例
 \end{example}
+\begin{oframed}
 \begin{verbatim}
 <?xml version="1.0" encoding="UTF-8" ?>
 <rss version="2.0">
@@ -150,7 +167,7 @@ RSS示例
 </channel>
 </rss>
 \end{verbatim}
-\end{figure}
+\end{oframed}
 
 在新闻列表解析模块，我们最关心的是新闻页面的URL，即\texttt{<link>}。
 通过简单的正则表达式匹配，就能抽取出一组新闻页面的URL，然后提交给新闻信息抽取模块。
@@ -172,16 +189,9 @@ Web新闻聚合系统面向国内舆情热点，选取了知名的中文搜索�
 \end{itemize}
 
 URL中粗体标示的\textbf{keyword}可以替换为搜索关键词，搜索引擎会返回与之相关的新闻。
-如图~\ref{fig:baidu}~所示的百度新闻搜索，包含了新闻题目、摘要、发布时间和链接等信息。
+以百度新闻搜索为例，包含了新闻题目、摘要、发布时间和链接等信息。
 通过人工编写的包装器，可以抽取出一组新闻页面的URL，
 由于搜索引擎较少，编写包装器的开销并不大。
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{baidu}
-\caption{百度新闻搜索}
-\label{fig:baidu}
-\end{figure}
 
 \subsubsection{一般新闻网站}
 RSS基于XML提供了一种统一的信息发布格式，大大降低了聚合信息的代价，
@@ -212,13 +222,13 @@ RSS基于XML提供了一种统一的信息发布格式，大大降低了聚合�
 \end{tabular}
 \end{table}
 
-\subsection{新闻信息抽取}
+\subsection{信息抽取模块}
 新闻信息抽取模块的输入是新闻页面的URL，然后返回抽取的发布日期、标题和新闻正文三元组。
 新闻信息抽取流程如图~\ref{fig:news-extract}~所示，在抽取各项信息之前，
 还需要检测新闻网页的编码格式，将HTML文档在内存中解析为DOM树。
 在信息抽取结束后，还需要判断抽取的三元组是否有效，无效则放弃。
 
-\begin{figure}[htbp]
+\begin{figure}[t]
 \centering
 \begin{tikzpicture}[node distance = 2cm, auto]
 \node[startstop](init){开始};
@@ -231,7 +241,6 @@ RSS基于XML提供了一种统一的信息发布格式，大大降低了聚合�
 \node[decision, below of=content, yshift=-0.5cm](verify){是否有效？};
 \node[io, below of=verify, yshift=-0.5cm](output){日期，标题，正文};
 \node[startstop, below of=output](stop){结束};
-\node[startstop, right of=verify, xshift=3cm](failed){失败};
 
 \draw[arrow](init)--(input);
 \draw[arrow](input)--(encoding);
@@ -241,7 +250,7 @@ RSS基于XML提供了一种统一的信息发布格式，大大降低了聚合�
 \draw[arrow](title)--(content);
 \draw[arrow](content)--(verify);
 \draw[arrow](verify)--node[near start]{是}(output);
-\draw[arrow](verify)--node[near start]{否}(failed); 
+\draw[thick,->](verify) -| node[near start]{否} ++(4,-2) |- (stop); 
 \draw[arrow](output)--(stop);
 \end{tikzpicture}
 \caption{新闻信息抽取流程图}
@@ -296,21 +305,82 @@ HTML文档中\texttt{<title>}标签表示网页的标题，但它一般不能直
 
 \subsubsection{新闻正文}
 根据~\ref{sec:cevc-experiment}~节的对比结果，我们选择本文提出的
-CEVC（Content Extraction via Valid Characters）算法来抽取新闻正文。
+基于有效字符的Web内容抽取算法CEVC来抽取新闻正文。
 CEVC易于实现，预处理阶段依赖小，并且在多个数据集上得到了优于其它对比算法的抽取结果。
 
-\subsection{存储和检索}
+\subsection{URL过滤模块}
+爬虫在根据系统配置反复抓取的过程中，
+需要一个全局的URL过滤模块来判断是否已经处理过当前URL，避免浪费系统资源重复抓取。
+针对具体的新闻采集业务，新闻列表URL不能参与过滤，
+因为同一个新闻列表页面会不断更新，我们需要反复抓取来获得最新的新闻URL。
+需要过滤验重的是具体新闻页面的URL，新闻一经发表不会再改动，它们的URL也是永久链接，
+基于此能够达到过滤要求。
+
+系统采用Redis\footnote{http://redis.io/}来实现全局URL过滤模块，
+Redis（REmote DIctionary Server）是一个开源的Key-Value存储系统，
+使用C语言编写，发行在BSD协议下，与其它Key-Value缓存产品相比具有以下特点：
+\begin{enumerate}
+\item Redis既可以作为内存型存储，也可以将数据持久化保存在硬盘中，
+重启时可以再次加载使用；
+\item Redis不仅仅支持简单的Key-Value存储，还提供列表、集合、哈希等高级数据结构；
+\item Redis的所有操作都是原子性的，在分布式应用场景下能够保证数据一致性。
+\end{enumerate}
+
+最直接的URL过滤方案是使用Redis内置的\texttt{Set}类型，
+通过哈希表实现，提供一个string类型的无序集合，集合中不能出现重复数据。
+为了提高URL过滤模块存储空间的利用效率，系统采用一种改进的方案：布隆过滤器。
+
+布隆过滤器可以看做是对Bit-Map的扩展，其空间效率很高，
+在Redis中由\texttt{GETBIT}和\texttt{SETBIT}实现。
+当一个元素被加入集合时，通过K个哈希函数将这个元素映射成一个Bit-Array中的K个位置，
+把它们置为1。
+在检索时，如果这K个位置都为1，那么该元素\textbf{很可能}存在，
+如果这K个位置有任何一个0，那么该元素\textbf{一定不}存在。
+
+布隆过滤器存在误判的现象，具体到新闻采集业务中，就是未被处理过的URL被误判为已经处理过，
+但这个概率足够小，一般在万分之一以下，能够被系统接受。
+构造布隆过滤器需要提供两个参数，期望容纳的元素个数$n$和误判率$p$，
+根据相关公式，能够计算出最优的哈希函数个数。
+
+\subsection{并行调度模块}
+在爬虫下载网页的过程中，取决于网络延迟，相当一部分时间花费在等待网站服务器的返回上，
+此时工作线程只能阻塞等待。
+爬虫采集系统为了保证实时性、提高采集效率，必须充分提高系统的并行度。
+
+采集系统使用“生产者-消费者”的模式，由工作进程统一分解、下发具体的任务，
+每个任务都是无状态的，包含执行所需的所有参数。
+这样工作进程就能够以幂等的形式存在，只需要关心任务即可，不需要考虑业务之间的状态，
+使得工作进程能够通过多机分布式、多进程、多线程的方式简单扩展，不增加额外编程开销。
+
+多个工作进程形成一个“池”，限制了并发规模，在多机部署的时候也能实现负载均衡。
+工作进程相互平等，可以接受任意一个网站的抓取任务，
+这样不同网站的抓取任务能够随机分布于不同的进程中，防止对单一网站密集抓取而导致的封禁。
+
+爬虫模块由CPython编写，因为CPython存在GIL
+\footnote{全局解释器锁，是计算机程序设计语言解释器用于同步线程的工具，
+使得任何时刻仅有一个线程在执行}，
+爬虫模块为了实现真正的并发，使用了多进程的方式，
+为了提高进程的利用效率，也可以选择在进程内部运行多线程。
+
+消息队列使用开源的Beanstalkd\footnote{http://kr.github.io/beanstalkd/}，
+它使用C语言编写，简单而高效。
+Beanstalkd支持优先级队列，在采集系统中，我们能够对任务设置不同的优先级，
+让实时性更高的任务优先执行，以实现资源的灵活调配。
+Beanstalkd还支持延迟消息，这可以利用在爬虫采集过程中，
+使得同一个网站的抓取任务保持一定的时间间隔，
+防止因为高流量的请求而被网站服务器封禁。
+
+\subsection{存储和检索模块}
 由于传统的关系型数据库MySQL对中文全文检索支持不足，且扩展性差，
 除了配置管理、任务管理等传统业务存储于MySQL中，
 未来增长较快、关系结构简单、需要全文检索的数据则存储于其它数据仓库中。
 
-在对比了Mongodb\footnote{https://www.mongodb.com/}，
-Solr\footnote{http://lucene.apache.org/solr/}和
+在对比了Mongodb，Solr和
 Elasticsearch\footnote{https://www.elastic.co/}后，
 我们选择了Elasticsearch作为数据存储和检索的一体化平台。
 
 Elasticsearch是一个实时的分布式搜索和分析引擎，
-它建立在全文搜索引擎框架Apache Lucence\footnote{http://lucene.apache.org/}
+它建立在全文搜索引擎框架Apache Lucence
 的基础之上，其诞生伊始就完全基于分布式架构。
 Elasticsearch可以用于全文搜索、结构化搜索和分析，
 在当前互联网上已经有许多成功使用的案例：
@@ -323,18 +393,18 @@ Elasticsearch可以用于全文搜索、结构化搜索和分析，
 
 Elasticsearch为了提供一个扩展性强同时易用的分布式系统，做了许多自动化工作，
 例如文档划分到不同容器或者分片中，集群中索引和搜索的跨节点负载均衡，
-数据分片的自动冗余备份，无缝扩展或者恢复整个集群。
+数据分片的自动冗余备份，无缝衔接的扩展或者恢复整个集群。
 
 Elasticsearch是面向文档的分布式搜索引擎，文档可以代表一个对象。
 新闻对象在Elasticsearch中的字段映射如例~\ref{ex:news-mapping}~所示，
 其中定义了\texttt{pubdate}为日期类型，\texttt{title}和\texttt{content}为字符串，
 \texttt{smartcn}是所使用的中文分词组件。
 
-\begin{figure}[t]
 \begin{example}
 \label{ex:news-mapping}
 新闻对象的字段映射
 \end{example}
+\begin{oframed}
 \begin{verbatim}
 "news": {
   "properties": {
@@ -346,70 +416,81 @@ Elasticsearch是面向文档的分布式搜索引擎，文档可以代表一个�
   }
 }
 \end{verbatim}
-\end{figure}
+\end{oframed}
 
 \section{运行效果评估}
-\label{sec:system:runtime}
+\label{sec:system-evaluation}
 
-Web新闻聚合系统的开发环境是一台MacBook Pro（2 GHz Intel Core i7处理器，
-8G内存，256G SSD），系统功能的实现得益于许多开源项目的支持：
-\begin{itemize}
-\item 编程语言：Python 2.7
-\item 存储与检索：MySQL，Elasticsearch，Redis
-\item 消息队列：Beanstalkd
-\item Web：Flask Web Framework，JQuery，Bootstrap
-\end{itemize}
+\subsection{测试环境}
 
-\newcommand{\slice}[4]{
-  \pgfmathparse{0.5*#1+0.5*#2}
-  \let\midangle\pgfmathresult
+Web新闻采集系统的测试环境是一台曙光服务器，
+硬件配置如表~\ref{tbl:hard-env}~所示，软件配置如表~\ref{tbl:soft-env}~所示。
 
-  % slice
-  \draw[thick,fill=black!10] (0,0) -- (#1:1) arc (#1:#2:1) -- cycle;
+\begin{table}[htbp]
+\centering
+\begin{minipage}{0.45\textwidth}
+\caption{系统硬件环境}
+\label{tbl:hard-env}
+\vspace{0.5em}\centering\wuhao
+\begin{tabular}{ll}
+\toprule[1.5pt]
+硬件 & 型号 \\
+\midrule[1pt]
+处理器 & AMD Opteron(tm) 6337 HE 6Core 1GHz \\
+主板 & Sugon CB60-T Blade 1.0 \\
+内存 & 32G \\
+硬盘 & 320G \\
+网卡 & Intel 82576 Gigabit Network Connection \\
+\bottomrule[1.5pt]
+\end{tabular}
+\end{minipage}
+\hfill
+\begin{minipage}{0.45\textwidth}
+\caption{系统软件环境}
+\label{tbl:soft-env}
+\vspace{0.5em}\centering\wuhao
+\begin{tabular}{ll}
+\toprule[1.5pt]
+软件 & 版本 \\
+\midrule[1pt]
+Linux CentOS & 7.0 \\
+Python & 2.7.10 \\
+MySQL & 5.6.27 \\
+Elasticsearch & 2.3.3 \\
+Redis & 3.2.0 \\
+Beanstalkd & 1.10 \\
+Apache & 2.4.20 \\
+\bottomrule[1.5pt]
+\end{tabular}
+\end{minipage}
+\end{table}
 
-  % outer label
-  \node[label=\midangle:#4] at (\midangle:1) {};
+\subsection{新闻采集统计}
 
-  % inner label
-  \pgfmathparse{min((#2-#1-10)/110*(-0.3),0)}
-  \let\temp\pgfmathresult
-  \pgfmathparse{max(\temp,-0.5) + 0.8}
-  \let\innerpos\pgfmathresult
-  \node at (\midangle:\innerpos) {#3};
-}
+系统从2016年6月8日至17日，平均每天采集2000条新闻，
+涉及政治、经济和时事等各个方面。
+新闻数量TOP 10的网站分布如图~\ref{fig:site-breakdown}~所示，
+新闻采集量最多的网站依次是中国新闻网、环球网、南方网、新华网和凤凰资讯。
 
 \begin{figure}[htbp]
 \centering
-\begin{tikzpicture}[scale=3]
-\newcounter{a}
-\newcounter{b}
-\foreach \p/\t in {
-15/中国新闻网,
-13/环球网,
-10/南方网,
-10/新华网,
-10/凤凰资讯,
-42/其它
-}{
-  \setcounter{a}{\value{b}}
-  \addtocounter{b}{\p}
-  \slice{\thea/100*360}
-        {\theb/100*360}
-        {\p\%}{\t}
-}
-
-\end{tikzpicture}
-\caption{新闻网站的采集情况}
-\label{fig:news-breakdown}
+\includegraphics[width=0.9\textwidth]{site-breakdown}
+\caption{新闻采集网站TOP 10}
+\label{fig:site-breakdown}
 \end{figure}
 
-系统从2016年6月8日至14日，平均每天采集2000条新闻，
-涉及政治、经济和时事等各个方面。
-新闻数量TOP 5的网站分布如图~\ref{fig:news-breakdown}~所示，
-新闻采集量最多的网站依次是中国新闻网、环球网、南方网、新华网和凤凰资讯。
+\subsection{新闻信息抽取测试}
 
-为了评估新闻信息抽取模块对标题、发布日期抽取的准确率，
-我们从系统采集的新闻中随机抽取200篇，人工审核标题、发布日期抽取是否正确，
+为了评估新闻信息抽取模块的准确率，我们从系统采集的新闻中随机抽取200篇，
+根据系统中保存的URL访问原始新闻网页，验证各项信息是否抽取正确。
+标题和发布日期很容易判断是否正确，记录正确抽取的数量即可。
+对于新闻正文的抽取效果，分为两项指标来判断：
+\begin{enumerate}
+\item 抽取内容是否包含新闻正文；
+\item 抽取内容是否基本上只包含新闻正文，即噪声部分比例很小。
+\end{enumerate}
+这两项指标易于人工审核，也兼顾了精确率和召回率。
+
 最终结果如表~\ref{tbl:title-date}~所示。
 新闻标题通过\texttt{<title>}和\texttt{<h1>}联合确定，
 在新闻网页中基本都符合这个规律，所以在样本中准确率达到了100\%。
@@ -420,8 +501,16 @@ Web新闻聚合系统的开发环境是一台MacBook Pro（2 GHz Intel Core i7�
 这使得系统在采集过程中，丢弃了部分新闻，可能是由于正当的原因（URL失效，非新闻网页），
 也可能由于信息抽取的失败，所以表~\ref{tbl:title-date}~中的结果要优于实际情况。
 
+包含正文的准确率为96\%，基本只包含正文的准确率为91\%，
+这个结果相对于~\ref{sec:cevc-experiment}~节表~\ref{tbl:cevc-cevc}~中的指标，
+99.1\%的召回率和95.8\%的精确率，都有一定差距。
+这是因为这里的测试是针对单篇新闻的，没有按字符计算，要求更加严格。
+一篇新闻如果没有正确抽取出全部正文，就不能认为包含正文，
+而在按字符统计的过程中，依然把正确抽取的内容计算到召回率中。
+另外，测试样本较少也是一个因素。
+
 \begin{table}[htbp]
-\caption{新闻标题和发布日期抽取效果评估}
+\caption{新闻信息抽取效果评估}
 \label{tbl:title-date}
 \vspace{0.5em}\centering\wuhao
 \begin{tabular}{llll}
@@ -430,10 +519,20 @@ Web新闻聚合系统的开发环境是一台MacBook Pro（2 GHz Intel Core i7�
 \midrule[1pt]
 标题 & 200 & 200 & 100\% \\
 发布日期 & 200 & 191 & 95.5\% \\  
-标题和发布日期 & 200 & 191 & 95.5\% \\
+包含正文 & 200 & 186 & 93\% \\
+基本只包含正文 & 200 & 182 & 91\% \\
 \bottomrule[1.5pt]
 \end{tabular}
 \end{table}
+
+\subsection{新闻检索测试}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.9\textwidth]{web-ui}
+\caption{新闻检索界面}
+\label{fig:web-ui}
+\end{figure}
 
 新闻检索界面如图~\ref{fig:web-ui}~所示，
 在检索框输入关键词“奥兰多”，系统返回与之关联的新闻，并对关键词进行高亮处理。
@@ -444,7 +543,9 @@ Web新闻聚合系统的开发环境是一台MacBook Pro（2 GHz Intel Core i7�
 Elasticsearch使用了高效的索引结构，系统对关键词查询的响应时间在0.5秒以内，
 能够适应实时检索的要求。
 
-Web新闻聚合系统使用了模板无关的内容抽取算法CEVC，
+\section{本章小结}
+
+Web新闻采集系统使用了模板无关的内容抽取算法CEVC，
 并结合一些领域规则抽取标题、发布日期，
 不需要对新闻页面单独构造包装器，大大降低了系统扩展和维护的成本。
 
@@ -453,10 +554,3 @@ Web新闻聚合系统使用了模板无关的内容抽取算法CEVC，
 借助于RSS的统一协议和元搜索技术，新闻列表解析中人工配置和包装器构造的成本能够接受。
 系统的后续工作将集中于如何自动扩展新闻采集来源，进一步降低人工参与的成本，
 实现系统的高度自动化。
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.9\textwidth]{web-ui}
-\caption{新闻检索界面}
-\label{fig:web-ui}
-\end{figure}
