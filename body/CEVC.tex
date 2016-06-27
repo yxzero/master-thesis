@@ -17,7 +17,7 @@ Web新闻区别于传统的报纸，在互联网上发布意味着它能够触�
 但除了新闻正文之外，一个典型的新闻网页还包含导航栏、广告、推荐链接和版权信息等，
 这些与正文无关的额外内容，通常称为噪声。
 Gibson在2005年的研究\cite{gibson2005volume}显示，
-网页模板在整个网页中占据了$40\%$--$50\%$的字节量，而且这个比例正以每年$6\%$的速度增长。
+网页模板在整个网页中占据了40\%--50\%的字节量，而且这个比例正以每年6\%的速度增长。
 以一篇新浪新闻\footnote{http://news.sina.com.cn}为例，如图~\ref{fig:news}~所示，
 红色实线圈出的内容都与正文无关，它们占据了网页一半以上的篇幅。
 
@@ -46,10 +46,11 @@ Gibson在2005年的研究\cite{gibson2005volume}显示，
 由于新闻和博客网页布局与内容抽取目标的相似性，本章将两者合并处理，
 提出一种基于有效字符的Web内容抽取方法。
 ~\ref{sec:cevc-other}~节简单介绍对比算法CETR（基于文本标签比）、CETD（基于文本密度）
-和CEPR（基于文本标签路径比）的原理及实现细节，
+和CEPR（基于文本标签路径比）的原理及实现细节；
 ~\ref{sec:cevc-method}~节详述本文提出的基于有效字符的Web内容抽取算法CEVC
-（Content Extraction via Valid Characters），
-~\ref{sec:cevc-experiment}~节进行新闻和论坛的内容抽取实验，并分析实验结果。
+（Content Extraction via Valid Characters）；
+~\ref{sec:cevc-experiment}~节进行新闻和论坛的内容抽取实验，并分析实验结果；
+~\ref{sec:cevc-conclusion}~节总结本章。
 
 \section{对比算法及实现}
 \label{sec:cevc-other}
@@ -120,8 +121,6 @@ f'(T_i')=G_i=\frac{\sum_{j=0}^{\alpha} T_{i+j}'}{\alpha} - T_i',
 与一般的K-means聚类不同，将其中一个簇的中心点固定为二维坐标系的原点，
 这样可以使得剩余簇远离原点，并且很容易划分最终的结果，
 即中心点固定在原点的簇是噪声内容，而剩余簇代表有效内容。
-
-\textbf{实现细节}
 
 作者一共提出了三种算法，记为CETR-TM、CETR-KM和CETR。
 CETR-TM是阈值算法，CETR-KM是一维数据上的K-means聚类算法，
@@ -198,8 +197,6 @@ DensitySum基于这样的观察，网页的内容块在DOM树结构中都属于�
 DensitySum_N = \sum_{i \in C} TextDensity_i
 \end{equation}
 \end{definition}
-
-\textbf{实现细节}
 
 作者一共提出了三种算法CETD-DS，CECTD-S和CECTD-DS。
 CETD-DS是基于Text Density和DensitySum的算法，
@@ -287,8 +284,6 @@ w_{ij} =
 公式（~\ref{eq:cepr-w}~）中的$dist(p_i, p_j)$是路径$p_i$和$p_j$的
 编辑距离\citeup{levenshtein1966binary}，
 $\alpha$是调节编辑距离对平滑贡献的参数。
-
-\textbf{实现细节}
 
 作者一共提出了三种算法CEPR-TPR，CEPR-ETRP和CEPR-SETPR。
 CEPR-TPR是基于TPR的算法，CEPR-ETPR是基于扩展的ETPR的算法，
@@ -601,7 +596,7 @@ totalValidChars = 0 \;
 }
 \end{algorithm}
 
-\subsection{算法实现细节}
+\subsection{算法实现概述}
 本文中CEVC算法使用Python 2.7实现。
 
 面对HTML网页中普遍存在的代码错误，例如缺失结束标签、使用非标准的标签和错误的嵌套等，
@@ -923,7 +918,7 @@ CEVC的下降幅度最小，而CEPR和CETR的召回率下降幅度最大，
 从对新闻的99\%左右下降到对博客的88\%左右。
 CEVC对新闻和博客的抽取效果更为稳定，优于对比算法。
 
-\begin{figure}[htbp]
+\begin{figure}[t]
 \centering
 \begin{tikzpicture}
 \begin{groupplot}[
@@ -1067,3 +1062,17 @@ CEVC算法对正文内容较短的网页，抽取效果较差。
 \caption{不同算法的抽取区域比较}
 \label{fig:blog-compare}
 \end{figure}
+
+\section{本章小结}
+\label{sec:cevc-conclusion}
+
+本章研究针对新闻、博客的模板无关的自动化Web内容抽取技术，
+首先简单介绍对比算法CETR（基于文本标签比）、CETD（基于文本密度）
+和CEPR（基于文本标签路径比）的原理及实现细节，
+然后提出一种基于有效字符的Web内容抽取算法CEVC。
+该算法主要基于这样的观察，网页中不属于超链接并包含停止词的文本，更有可能是核心内容。
+然后以一种自顶向下的方法，根据有效字符的分布，逐层在DOM树中确定核心内容区域。
+最后在知名的中文新闻、博客网站上对四种方法进行了对比实验，
+实验结果表明CEVC能达到平均95.8\%的F\textsubscript{1}-measure，
+效果优于之前的算法CETR和CEPR。
+虽然抽取性能和CETD相当，但在预处理阶段依赖更小，适用性更强。

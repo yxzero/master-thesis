@@ -156,23 +156,23 @@ LQF（Link Quota Filters）\citeup{mantratzis2005separating}
 利用网页分块中的链接比重来识别导航栏或相似的噪声内容。
 停止词和其它一些启发式规则也在一些工作中出现\citeup{gottron2008combining}。
 
-CCB（Content Code Blurring）\citeup{gottron2008content}
+2008年的CCB（Content Code Blurring）\citeup{gottron2008content}
 将网页HTML代码视为一个向量，生成二元的Content Code Vector（CCV）。
 网页源文件中的文本内容在向量中为1，HTML代码在向量中为0，这样就把网页转换为一个二元向量。
 随后对向量进行处理，从中找出同质化格式的内容，即连续为1的部分。
-CETR（Content Extraction via Tag Ratios）\citeup{weninger2010cetr}
+2010年的CETR（Content Extraction via Tag Ratios）\citeup{weninger2010cetr}
 对网页源文件一行一行处理，计算出每行的Tag Ratios，即一行中的实际字符数除以HTML标签数。
 Tag Ratio越高就越可能是主要内容，作者最后将计算结果映射到二维空间，利用聚类算法进行处理。
 这两种算法简单、高效不需要训练数据，也不需要解析DOM树或者渲染网页，
 但按行处理的方式没有利用HTML的结构化信息，对网页代码风格也较为敏感。
 
-CETD（Content Extraction via Text Density）\citeup{sun2011dom}
+2011年的CETD（Content Extraction via Text Density）\citeup{sun2011dom}
 首先将HTML网页解析为DOM树，然后对每个节点计算Text Density，
 即该DOM节点包含的字符数除以标签数，在考虑到链接与噪声的相关性后，
 提出Composite Text Density，对文本密度做了一些修正。
 最后提出一种结合DOM树的DensitySum计算方式替换常用的平滑和阈值划分方法，最终确定核心内容块。
 
-CEPR（Content Extraction via Path Ratios）\citeup{wu2013web}
+2013年的CEPR（Content Extraction via Path Ratios）\citeup{wu2013web}
 认为网页内容布局与其DOM树的标签路径之间存在隐含的关联，针对每个节点计算文本标签路径比，
 即文本长度与标签路径出现次数的比值。
 文本标签路径比越高，表明这个路径模式承载的文本信息越多，越可能是主要内容。
@@ -203,7 +203,7 @@ SoftMealy基于有限状态转换器（Finite State Transducer，FST）和上下
 由用户定义模式并给出模式与HTML页面的映射关系，随后推导出规则构造包装器。
 
 另一类基于模板树匹配的方法，首先从标注数据生成模板树，
-模板树中映射了数据记录的位置，
+模板树中映射了数据记录的相应位置，
 随后对同一类型的网页，运行树匹配算法，即可抽取结构化数据。
 Chuang等人\citeup{chuang2004tree}
 提出一种模板树自动生成算法TTAG，能够从少量的训练网页中学习模板的树型结构，
@@ -212,8 +212,8 @@ Zheng等人\citeup{zheng2009efficient}
 提出一种新的Broom结构来同时表示数据记录和生成的模板，能够有效抽取数据记录并识别内部的语义。
 
 国内李效东\citeup{李效东2002基于}
-提出一种归纳学习算法来半自动地生成提取规则，其原理是，
-将所需要提取的信息在DOM层次结构中的路径作为信息抽取的“坐标”。
+提出一种归纳学习算法来半自动地生成提取规则，
+利用DOM树中的路径作为信息抽取的坐标，指导抽取过程。
 算法是一个典型的顺序覆盖算法，产生一个假设去覆盖集合中尽可能多的正例，再删除被覆盖的正例，
 循环直至所有的元素被覆盖。
 
@@ -234,7 +234,7 @@ Omini将网页解析为树型结构然后分两步抽取对象，定位子树和
 这部分方法过于依赖启发式规则，难以大规模扩展，而且如今的网页结构和布局也发生了很大变化。
 
 Chang等人提出一个能够从网页中自动发现抽取规则的系统IEPAD\citeup{chang2001iepad}，
-它通过重复模式挖掘和多序列对齐来识别数据记录的边界。
+识别数据记录用到了重复模式的挖掘和多序列对齐（multiple sequence alignment）。
 重复模式的挖掘通过一种新的数据结构PAT树来实现，并经过模式对齐进一步扩展以理解所有的记录实例。
 Wang等人在此基础上提出了DeLa\citeup{wang2003data}，
 该系统通过HTML表单提交查询，自动生成基于正则表达式的包装器从结果页中抽取数据对象。
@@ -246,7 +246,7 @@ MDR\citeup{liu2003mining}是其中的典型代表，它依据这样的假设：
 2）每个数据记录之下包含相同数目的兄弟子树。
 MDR方法简单，抽取结果也由于Omini和IEPAD。
 
-Song等人提出一种抽取用户生成数据（UGC）记录的方法MiBAT\citeup{song2010automatic}。
+2010年Song等人提出一种抽取用户生成数据（UGC）记录的方法MiBAT\citeup{song2010automatic}。
 论坛帖子、评论回复等用户生成数据格式自由，可能包含图片和格式化标签，
 前述方法主要针对高度格式化的数据，例如商品展示信息，从而忽略了UGC的影响。
 MiBAT利用领域知识限制，即UGC中普遍存在的发布时间信息作为锚节点，来定位候选子树，
