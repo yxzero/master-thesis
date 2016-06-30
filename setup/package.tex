@@ -26,10 +26,10 @@ foot=8.5true mm,
 \usepackage{graphicx}
 \usepackage{tikz}
 \usetikzlibrary{positioning, shapes.geometric, arrows}
-\tikzstyle{startstop} = [rectangle, rounded corners=10pt, minimum width=3cm, minimum height=1cm,text centered, draw=black]
-\tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=3cm, minimum height=1cm, text centered, draw=black]
-\tikzstyle{process} = [rectangle, minimum width=3cm, minimum height=1cm, text centered, draw=black]
-\tikzstyle{decision} = [diamond, minimum width=3cm, minimum height=1cm, text centered, draw=black]
+\tikzstyle{startstop} = [rectangle, rounded corners=10pt, minimum width=2cm, minimum height=1cm,text centered, draw=black]
+\tikzstyle{io} = [trapezium, trapezium left angle=70, trapezium right angle=110, minimum width=2cm, minimum height=1cm, text centered, draw=black]
+\tikzstyle{process} = [rectangle, minimum width=2cm, minimum height=1cm, text centered, draw=black]
+\tikzstyle{decision} = [diamond, minimum width=2cm, minimum height=1cm, text centered, draw=black]
 \tikzstyle{arrow} = [thick,->,>=stealth]
 \usepackage{pgfplots}
 \pgfplotsset{compat=1.13}
@@ -68,4 +68,4 @@ naturalnames,
 ]{hyperref}
 
 % 算法的宏包，注意宏包兼容性，先后顺序为float、hyperref、algorithm(2e)
-\usepackage[plainruled,linesnumbered,algochapter]{algorithm2e}
+\usepackage[ruled,plainruled,linesnumbered,algochapter]{algorithm2e}

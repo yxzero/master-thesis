@@ -235,17 +235,17 @@ RSS基于XML提供了一种统一的信息发布格式，大大降低了聚合�
 
 \begin{figure}[t]
 \centering
-\begin{tikzpicture}[node distance = 2cm, auto]
-\node[startstop](init){开始};
-\node[io, below of=init](input){新闻URL};
-\node[process, below of=input](encoding){编码格式检测};
-\node[process, below of=encoding](DOM){DOM树解析};
-\node[process, right of=init, xshift=3cm](date){发布日期抽取};
-\node[process, below of=date](title){标题抽取};
-\node[process, below of=title](content){新闻正文抽取};
-\node[decision, below of=content, yshift=-0.5cm](verify){是否有效？};
-\node[io, below of=verify, yshift=-0.5cm](output){日期，标题，正文};
-\node[startstop, below of=output](stop){结束};
+\begin{tikzpicture}[node distance = 1.5cm, auto]
+\node[startstop](init){\footnotesize 开始};
+\node[io, below of=init](input){\footnotesize 新闻URL};
+\node[process, below of=input](encoding){\footnotesize 编码格式检测};
+\node[process, below of=encoding](DOM){\footnotesize DOM树解析};
+\node[process, right of=init, xshift=3cm](date){\footnotesize 发布日期抽取};
+\node[process, below of=date](title){\footnotesize 标题抽取};
+\node[process, below of=title](content){\footnotesize 新闻正文抽取};
+\node[decision, below of=content, yshift=-0.5cm](verify){\footnotesize 是否有效？};
+\node[io, below of=verify, yshift=-0.5cm](output){\footnotesize 日期，标题，正文};
+\node[startstop, below of=output](stop){\footnotesize 结束};
 
 \draw[arrow](init)--(input);
 \draw[arrow](input)--(encoding);
@@ -254,8 +254,8 @@ RSS基于XML提供了一种统一的信息发布格式，大大降低了聚合�
 \draw[arrow](date)--(title);
 \draw[arrow](title)--(content);
 \draw[arrow](content)--(verify);
-\draw[arrow](verify)--node[near start]{是}(output);
-\draw[thick,->](verify) -| node[near start]{否} ++(4,-2) |- (stop); 
+\draw[arrow](verify)--node[near start]{\footnotesize 是}(output);
+\draw[thick,->](verify) -| node[near start]{\footnotesize 否} ++(4,-2) |- (stop); 
 \draw[arrow](output)--(stop);
 \end{tikzpicture}
 \caption{新闻信息抽取流程图}

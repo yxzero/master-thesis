@@ -16,7 +16,7 @@ Web新闻区别于传统的报纸，在互联网上发布意味着它能够触�
 
 但除了新闻正文之外，一个典型的新闻网页还包含导航栏、广告、推荐链接和版权信息等，
 这些与正文无关的额外内容，通常称为噪声。
-Gibson在2005年的研究\cite{gibson2005volume}显示，
+Gibson\citeup{gibson2005volume}在2005年的研究显示，
 网页模板在整个网页中占据了40\%--50\%的字节量，而且这个比例正以每年6\%的速度增长。
 以一篇新浪新闻\footnote{http://news.sina.com.cn}为例，如图~\ref{fig:news}~所示，
 红色实线圈出的内容都与正文无关，它们占据了网页一半以上的篇幅。
@@ -205,7 +205,7 @@ CECTD-DS是基于Composite Text Density和DensitySum的算法。
 根据作者的实验对比，CECTD-DS的抽取性能最佳，也是本章中参与对比的算法。
 如无特殊说明，以后简称CECTD-DS为CETD算法。
 
-根据\cite{sun2011dom}给出的算法伪代码，我们用Python 2.7重新实现了CETD。
+根据文献\cite{sun2011dom}给出的算法伪代码，我们用Python 2.7重新实现了CETD。
 为了处理HTML文档中的错误，同样使用了BeautifulSoup尽可能纠正。
 并通过BeautifulSoup，将HTML文档转化为内存中的DOM树，
 在进行计算和操作之前去除了所有\texttt{<script>}，\texttt{<style>}和\texttt{comment}。
@@ -262,7 +262,7 @@ ETPR(p) = TPR(p) \cdot
 $\sigma_cs$和$\sigma_ps$分别是路径$p$能访问的文本叶节点集合中
 文本长度和标点符号个数的标准差。
 
-在\cite{weninger2010cetr}的高斯平滑算法基础上，
+在文献\cite{weninger2010cetr}的高斯平滑算法基础上，
 作者提出以编辑距离作为权重，改善平滑效果。
 即公式（~\ref{eq:cetr-kernel3}~）的卷积运算修改为公式（~\ref{eq:cepr-kernel}~）。
 
@@ -291,14 +291,14 @@ CEPR-SETPR是基于ETPR并进行加权高斯平滑处理后的算法。
 根据作者的实验对比，CEPR-SETPR的抽取性能最佳，也是本章中参与对比的算法。
 如无特殊说明，以后简称CEPR-SETPR为CEPR算法。
 
-根据\cite{wu2013web}给出的算法伪代码，我们用Python 2.7重新实现了CEPR。
+根据文献\cite{wu2013web}给出的算法伪代码，我们用Python 2.7重新实现了CEPR。
 同样使用了BeautifulSoup来处理HTML文档，转化为DOM树结构。
 CEPR算法需要判断标点符号，这里使用了Python标准库的\texttt{string.punctuation}
 来定义英文标点符号，并补充了一个中文标点符号列表。
 CEPR算法需要计算路径的编辑距离，这里以Tag的尺度计算，
 而不是直接计算两个Tag Path字符串的编辑距离。
 
-我们在小规模数据集上进行了参数调整实验，确定了和\cite{wu2013web}中一致的参数配置：
+我们在小规模数据集上进行了参数调整实验，确定了和文献\cite{wu2013web}中一致的参数配置：
 $\lambda=0.8$，$\alpha=1$和$r=1$。
 
 \section{基于有效字符的Web内容抽取算法}
@@ -365,21 +365,21 @@ leaf/.style={rectangle, draw, text width=3.5cm}
   child{node[tag]{body}
     child{node[tag]{div}
       child{node[tag]{h1}
-        child{node[leaf]{Small Vintage Plane Crashes in Hudson River}}
+        child{node[leaf]{\footnotesize Small Vintage Plane Crashes in Hudson River}}
       }
     }
     child{node[tag]{div}}
     child{node[tag]{div}
       child{node[tag]{a}
         child{node[tag]{span}
-          child{node[leaf]{From Stefan Holt}}
+          child{node[leaf]{\footnotesize From Stefan Holt}}
         }
       }
       child{node[tag]{p}
-        child{node[leaf]{The plane was on a photo flight with two other planes}}
+        child{node[leaf]{\footnotesize The plane was on a photo flight with two other planes}}
       }
       child{node[tag]{p}
-        child{node[leaf]{They say they saw the pilot try to get out but}}
+        child{node[leaf]{\footnotesize They say they saw the pilot try to get out but}}
       }
     }
   }
@@ -597,8 +597,6 @@ totalValidChars = 0 \;
 \end{algorithm}
 
 \subsection{算法实现概述}
-本文中CEVC算法使用Python 2.7实现。
-
 面对HTML网页中普遍存在的代码错误，例如缺失结束标签、使用非标准的标签和错误的嵌套等，
 这里使用Python第三方库
 BeautifulSoup\footnote{http://www.crummy.com/software/BeautifulSoup/}
@@ -632,7 +630,7 @@ F_1 = \frac{2 \times P \times R}{P + R}
 因为中文分词需要额外的依赖，而且CEVC算法重在对有效字符的统计而不需要词的信息。
 $LCS(e,g)$是$e$和$g$的最长公共子序列，
 文档中两个相同的字符如果位置顺序不同，也会被LCS的计算区分开来。
-相比于\cite{weninger2010cetr}中使用的计算方法，把两个文档的词视为两个集合，
+相比于文献\cite{weninger2010cetr}中使用的计算方法，把两个文档的词视为两个集合，
 该方法利用了不同词的位置信息而更加准确。
 
 在计算一个网站或一个算法整体的评价指标时，是将每个单独网页的最长公共子序列长度累加计算的，
@@ -643,7 +641,7 @@ P = \frac{\sum LCS(e_i,g_i).length}{\sum e_i.length}
 \end{equation}
 
 除了标准评价指标外，这里给出另一个常用的评价方法Score。
-Score在\cite{sun2011dom}和\cite{wu2013web}中都提到过，
+Score在文献\cite{sun2011dom}和文献\cite{wu2013web}中都提到过，
 是为了替换CleanEval中运算开销很大的
 Levenshtein Distance\citeup{levenshtein1966binary}
 （对齐两个字符串所需要的插入、删除操作次数，不允许替换），
@@ -922,7 +920,7 @@ CEVC对新闻和博客的抽取效果更为稳定，优于对比算法。
 \centering
 \begin{tikzpicture}
 \begin{groupplot}[
-group style={group size=2 by 2, vertical sep=1.5cm},
+group style={group size=2 by 2, vertical sep=1.5cm, horizontal sep=2cm},
 legend style={at={(1, 0.7)},anchor=north east},
 height=0.4\textwidth,
 ]
@@ -931,6 +929,7 @@ height=0.4\textwidth,
 title=Precision,
 symbolic x coords={News, Blog, Average},
 xtick=data,
+ylabel=\%,
 ]
 \addplot[color=blue, mark=square*, dashed]
 coordinates{(News, 62.5) (Blog, 63.7) (Average, 63.1)};
@@ -946,6 +945,7 @@ coordinates{(News, 95.8) (Blog, 93.4) (Average, 94.5)};
 title=Recall,
 symbolic x coords={News, Blog, Average},
 xtick=data,
+ylabel=\%,
 ]
 \addplot[color=blue, mark=square*, dashed]
 coordinates{(News, 99.0) (Blog, 87.9) (Average, 93.0)};
@@ -961,6 +961,7 @@ coordinates{(News, 99.1) (Blog, 95.5) (Average, 97.2)};
 title=F\textsubscript{1},
 symbolic x coords={News, Blog, Average},
 xtick=data,
+ylabel=\%,
 ]
 \addplot[color=blue, mark=square*, dashed]
 coordinates{(News, 76.6) (Blog, 73.9) (Average, 75.2)};
@@ -975,6 +976,7 @@ coordinates{(News, 97.4) (Blog, 94.4) (Average, 95.8)};
 title=Score,
 symbolic x coords={News, Blog, Average},
 xtick=data,
+ylabel=\%,
 ]
 \addplot[color=blue, mark=square*, dashed]
 coordinates{(News, 62.1) (Blog, 58.6) (Average, 60.2)};

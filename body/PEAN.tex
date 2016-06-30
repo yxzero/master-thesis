@@ -96,7 +96,7 @@ TreeSim_f(T_1, T_2) = \frac{M \cap (f(V_1) \times f(V_2))}
 定义~\ref{def:tree-ex-sim}~中，
 $f(V_1) \times f(V_2) = {(u,v) \vert u \in f(V_1), v \in f(V_2)}$。
 最佳情况是，tree fragment选择函数直接选取了树的模板部分，但这难以做到。
-\cite{song2010automatic}定义了几种tree fragment选择函数，
+文献\cite{song2010automatic}定义了几种tree fragment选择函数，
 并最终使用了Pivot and Siblings（PS）选择函数。
 
 \begin{definition}
@@ -219,7 +219,7 @@ gray/.style={circle, draw, fill=gray},
 可以注意到，左树的G节点和右树的H节点处于同一位置，但由于标记不同而不匹配。
 父节点不匹配后，虽然G节点和H节点都有相同的I节点，也不能匹配，这就是自顶向下限制的体现。
 
-在自顶向下的限制之下，\cite{yang1991identifying}
+在自顶向下的限制之下，文献\cite{yang1991identifying}
 给出了一个动态规划的树匹配算法，时间复杂度为$O(n^2)$。
 如算法~\ref{algo:tree-match}~所示，
 树匹配过程和通过动态规划求两个字符串的最长公共子序列有相似之处。
@@ -254,7 +254,7 @@ Initialize a $m \times n$ matrix $M$ with all zeros \;
 \subsection{锚节点定义与统计方法}
 \label{subsec:anchor}
 
-使用锚节点来辅助信息抽取，在\cite{song2010automatic}中就已经提出。
+使用锚节点来辅助信息抽取，在文献\cite{song2010automatic}中就已经提出。
 锚节点具有这样的特点：
 \begin{itemize}
 \item 作为关键的数据单元出现在每一个数据记录的结构化模板中；
@@ -472,24 +472,24 @@ gray/.style={fill=gray},
 ]
 \node[tag](A1){div}
   child{node[tag](B1){div}
-    child{node[leaf]{2016-02-16}}
+    child{node[leaf]{\footnotesize 2016-02-16}}
   }
   child{node[tag](C1){div}}
   child{node[tag](D1){div}
-    child{node[leaf, gray]{There is something}}
-    child{node[tag, gray]{br}}
+    child{node[leaf, gray]{\footnotesize There is something}}
+    child{node[tag, gray]{\footnotesize br}}
   }
 ;
 \node[tag, right=8cm of A1](A2){div}
   child{node[tag](B2){div}
-    child{node[leaf]{2016-03-10}}
+    child{node[leaf]{\footnotesize 2016-03-10}}
   }
   child{node[tag](C2){div}}
   child{node[tag](D2){div}
-    child{node[tag, gray]{p}
-      child{node[leaf, gray]{The photo is amazing!}}
+    child{node[tag, gray]{\footnotesize p}
+      child{node[leaf, gray]{\footnotesize The photo is amazing!}}
     }
-    child{node[tag, gray]{img}}
+    child{node[tag, gray]{\footnotesize img}}
   }
 ;
 \draw [dashed, thick, ->](A1) to [bend left](A2);
@@ -556,8 +556,6 @@ lastNum = 0 \;
 算法~\ref{algo:pean-extract}~extract的总体时间复杂度为$O(mn^2)$。
 
 \subsection{算法实现概述}
-本文中PEAN算法使用Python 2.7实现。
-
 面对HTML网页中普遍存在的代码错误，例如缺失结束标签、使用非标准的标签和错误的嵌套等，
 这里使用Python第三方库BeautifulSoup来尽可能纠正这些错误。
 BeautifulSoup是一个可以从HTML或XML文件中提取数据的Python库，
@@ -756,14 +754,14 @@ MiBAT在树相似度计算过程中，尽可能选择隶属于格式化模板的
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth,height=0.45\textheight]{forum-compare}
-\caption{360安全社区}
+\caption{锚节点及其兄弟节点的差异性}
 \label{fig:forum-compare}
 \end{figure}
 
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=0.9\textwidth,height=0.45\textheight]{forum-compare2}
-\caption{天涯论坛}
+\caption{楼主发帖和其它帖子的区别}
 \label{fig:forum-compare2}
 \end{figure}
 
