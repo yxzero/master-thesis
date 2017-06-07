@@ -1,20 +1,20 @@
 
-\newcommand{\ctitle}{面向多通道爬虫的Web信息抽取技术研究}
+\newcommand{\ctitle}{多元话题竞争传播模型}
 \newcommand{\cdegree}{工学硕士}
 \newcommand{\csubject}{计算机科学与技术}
 \newcommand{\caffiliate}{计算机科学与技术学院}
-\newcommand{\cauthor}{马雪阳}
+\newcommand{\cauthor}{于璇}
 \newcommand{\csupervisor}{张宏莉~教授}
-\newcommand{\cdate}{2016 年~6 月}
+\newcommand{\cdate}{2017 年~6 月}
 
 \newcommand{\etitle}
-{RESEARCH ON WEB INFORMATION EXTRACTION TECHNIQUES FOR MULTI-CHANNEL CRAWLER}
+{Multi-topic Competition Propagation Model}
 \newcommand{\edegree}{Master of Engineering}
 \newcommand{\esubject}{Computer Science and Technology}
 \newcommand{\eaffiliate}{School of Computer Science and Technology}
-\newcommand{\eauthor}{Xueyang Ma}
+\newcommand{\eauthor}{Xuan Yu}
 \newcommand{\esupervisor}{Prof. Hongli Zhang}
-\newcommand{\edate}{June, 2016}
+\newcommand{\edate}{June, 2017}
 
 % 工业技术 > 自动化技术、计算机技术 > 计算技术、计算机技术 > 计算机的应用 > 在其他方面的应用
 \newcommand{\classifiedindex}{TP399}
@@ -23,83 +23,29 @@
 \newcommand{\confidentiality}{公开}
 
 \newcommand{\cabstract}{
-随着Internet的迅猛发展，网络已经成为一个信息发布和消费的巨大平台。
-互联网具有快速传播和广泛覆盖的特性，对互联网舆情进行有效监控是必不可少的。
-由于网页固有的半结构性以及大量存在的与主题无关的噪声，研究如何从Web中抽取人们所需要的信息
-变得越来越重要。
-在一个聚焦于新闻、博客和论坛（它们都是很有代表性的信息传播渠道）的多通道爬虫系统中，
-我们面临如下挑战：
-1）大量网站需要监控；
-2）网站有不同的结构和布局；
-3）网站会不定期改版。
-这些挑战促使我们提出高度自动化的Web信息抽取技术，以减少系统的扩展和维护成本。
+目前，随着在线社交网络的日益普及，社交网络在人们生活中扮演一个非常重要的角色，已经聚集了数亿用户。挖掘社交网络中有价值的信息，利用社交网络信息传播的规律进行热度预测，有助于用户获得需要的信息，企业广告精准投放，以及政府进行有效的舆情调控等。当前已经有很学者致力于发现信息扩散规律，在信息传播领域也有很多重要成果。然而，许多研究主要集中在单条信息是如何在网络中传播，对于多元信息传播分析中关于相互竞争干扰扩散传播模型的研究还处于初级阶段，相关研究工作不多。本文主要研究信息传播中类别的竞争合作关系，提出了一种基于竞争关系矩阵的预测模型，在预测单个用户转发概率以及热度预测任务中，相对于传统模型，各指标得到明显提升。
 
-对于新闻、博客这种正文密集的网站，本文提出了一个模板无关的基于有效字符的内容抽取算法
-CEVC（Content Extraction via Valid Characters）。
-为了验证该方法，我们从知名的中文新闻和博客网站上任意爬取了部分网页，构成测试数据集进行实验。
-实验结果表明CEVC能达到平均95.8\%的F\textsubscript{1}-measure，
-效果优于之前的算法CETR和CEPR，虽然抽取性能和CETD相当，
-但在预处理阶段依赖更小，适用性更强。
+当前已经有部分传播模型考虑到多条信息同时在网络中传播，但是，他们往往忽略用户和信息之间的关系。同时，以往大多数研究使用隐含特征建模，导致很难结合现实，对信息传播中的规律进行解释。本文使用探针用户的方法，加入用户与信息相互作用矩阵，使预测单个用户转发任务的准确率以及召回率得到提升。
 
-对于典型的论坛网站，本文利用帖子中普遍存在的发帖时间信息，提出了一个论坛帖子抽取算法
-PEAN（Post Extraction via Anchor Nodes）。
-为了和同样利用发帖时间信息的帖子抽取算法MiBAT比较效果，
-我们从知名的中文论坛网站上采集网页进行实验。
-实验结果表明PEAN相比于MiBAT在召回率指标上有大幅度提升，
-平均94.7\%的F\textsubscript{1}-measure也优于MiBAT。
+而传统的热度预测模型通常分为两种：1）使用单条信息的早期热度，发布时间等特征进行建模；2）对单条信息每个时段的热度，使用时间序列模型建模预测。这两种方法的通病是，没有考虑到多条新闻信息的相互影响，因此效果没有很好。我们在传统的预测模型基础上加入类别之间的相互作用关系，同时也加入用户与类别相互作用关系，最终得到反应类别之间相互作用关系矩阵，不仅在一定程度上解释信息传播的规律，并有效的改进了预测结果，使得平方损失误差降低35%，平均相对百分误差下降30%。
 
-为了验证本文提出的信息抽取算法的实际效果，
-我们针对实际需求设计并实现了一个Web新闻采集系统。
-由于使用了模板无关的内容抽取算法，该爬虫能够在较少人工辅助的情况下爬取新的网站，
-大大减少了系统扩展和维护的成本。
-实际系统的运行情况表明，模板无关的内容抽取算法对多通道爬虫系统具有实际意义。
 }
 
 \newcommand{\ckeywords}{
-多通道；爬虫；信息抽取；模板无关
+信息传播；竞争关系；热度预测；新闻
 }
 
 \newcommand{\eabstract}{
-With the explosive growth of the Internet, the Web has become a large platform
-for information publishing and consuming. It is essential to supervise the Internet
-public opinion effectively due to the rapid dissemination and extensive coverage.
-As the inherent semi-structured characteristics and large part of topic irrelevant
-noises, effectively extracting main content and filtering these noises is
-necessary and challenging.
-In a multi-channel crawler system which focuses on news, blog and forum, which are
-all representative information channels, we face the following challenges:
-1) enormous websites should be monitored;
-2) websites have different structures and various layouts;
-3) websites will change occasionally.
-These challenges motivated us to propose highly automated Web information extraction
-techniques to reduce the cost for system expansion and maintenance.
+At present, with the growing popularity of online social networks, social networks play a very important role in people's lives, has gathered hundreds of millions of users. Excavate the valuable information in social networks, for the heat prediction using the social network information dissemination rules, helps the user to obtain needed information, advertising accurate delivery, and for effective government regulation of public opinion. Many scholars have devoted to discover the law of information diffusion, and many important achievements have also been made in the field of information dissemination. However, many studies focused on single how information is spread in the network, for the multivariate analysis of dissemination of information about the mutual interference competition diffusion model is still in the primary stage, the related research work is not much. This paper mainly studies the categories of competition and cooperation in information communication, proposes a prediction model of competition based on relation matrix, in the prediction of a single user forwarding probability and heat prediction task, compared with the traditional model, the index has improved significantly. 
 
-For information-intensive websites like Web news and blog, we propose a template
-independent content extraction approach based on valid characters (CEVC).
-To validate the approach, we conduct experiments by using onling news and blog
-files arbitrarily crawled from well-known Chinese news and blog websites.
-Experimental result shows that our method achieves 95.8\% F\textsubscript{1}-measure
-on average and outperforms previous methods CETR and CEPR.
-Although CEVC has almost equivalent extraction performance as CETD,
-CEVC has less dependence in the pre-processing stage thus more applicable.
+At present, partial propagation model takes into account that many messages are transmitted in the network at the same time, but they often ignore the relationship between users and information. At the same time, most of the previous studies use implicit feature modeling, which makes it difficult to combine reality with the interpretation of the law of information dissemination. In this paper, the method of probe users is added to the interaction matrix between users and information, so that the accuracy and recall rate are improved.
 
-For typical forum websites, we utilize the ubiquitous date information in forum
-posts and propose a forum post extraction method (PEAN). To compare the effectiveness
-with MiBAT, which also uses the date information to extract posts, we conduct
-experiments on various Chinese forums. Experimental result shows that our method
-achieves much higher recall than MiBAT, and the F\textsubscript{1}-measure 
-of 94.7\% also outperforms MiBAT.
+The heat of the traditional models are generally divided into two types: 1) early heat using a single information, release time feature modeling; 2) for a single message each time the heat, predictive modeling time series model. The common problem of these two methods is that they do not take into account the interaction of many news information, so the effect is not very good. We join the interaction relationship between categories based on traditional forecasting model, while also adding users and categories of interaction, finally get the response categories, the interaction between relation matrix, not only a part of the explanation for the dissemination of information on the law, and effectively improves the prediction results, the root mean squared error is reduced by 35\%, the mean absolute percentage error decreased by 30\%.
 
-In order to verify the practicality of the methods, we design a framework for
-parallel multi-channel crawler system and implement a Web news crawler based on it.
-With the template independent content extraction approach, the crawler has the
-ability to crawl new websites with little human efforts. The result shows that
-template independent content extraction methods have practical value on
-on multi-channel crawler system.
 }
 
 \newcommand{\ekeywords}{
-multi-channel, crawler, information extraction, template independent
+information diffusion, competition interaction, hotness prediction, news 
 }
 
 \makecover
